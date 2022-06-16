@@ -25,12 +25,22 @@ func (m *TestRunner) Add(scenario *ScenarioBuilder) {
 }
 
 func (m *TestRunner) Run(t *testing.T) {
-	for i := range m.Builders {
-		scenario := m.Builders[i].Build()
+	m.buildScenarios()
+	for i := range m.Scenarios {
+		scenario := m.Scenarios[i]
 		t.Run(scenario.Name, func(t *testing.T) {
+			// TODO parallel
 			t.Parallel()
 			m.runScenario(t, scenario)
 		})
+	}
+}
+
+func (m *TestRunner) buildScenarios() {
+	if len(m.Scenarios) == 0 {
+		for i := range m.Builders {
+			m.Scenarios = append(m.Scenarios, m.Builders[i].Build())
+		}
 	}
 }
 
@@ -80,7 +90,7 @@ func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
 		} else {
 			// requeue assertion
 			remainingAssertions <- assertion
-			time.Sleep(interval) //TODO: currently sleeps between every assertion, should be only 1 per pass
+			time.Sleep(interval)
 		}
 	}
 

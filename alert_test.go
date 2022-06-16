@@ -1,10 +1,10 @@
 package main
 
 import (
-	. "github.com/datadog/e2e/pkg/e2e"
-	. "github.com/datadog/e2e/pkg/e2e/detonators"
-	. "github.com/datadog/e2e/pkg/e2e/matchers/datadog"
 	_ "github.com/datadog/stratus-red-team/pkg/stratus/loader" // Note: This import is needed
+	. "github.com/datadog/threatest/pkg/threatest"
+	. "github.com/datadog/threatest/pkg/threatest/detonators"
+	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog"
 	"testing"
 	"time"
 )

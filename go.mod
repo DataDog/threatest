@@ -1,4 +1,4 @@
-module github.com/datadog/e2e
+module github.com/datadog/threatest
 
 require (
 	github.com/DataDog/datadog-api-client-go v1.14.0

@@ -1,7 +1,7 @@
-package e2e
+package threatest
 
 import (
-	"github.com/datadog/e2e/pkg/e2e/matchers"
+	"github.com/datadog/threatest/pkg/threatest/matchers"
 	"strconv"
 	"testing"
 	"time"
@@ -65,7 +65,7 @@ func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
 	deadline := start.Add(scenario.Timeout)
 	for len(remainingAssertions) > 0 {
 		if hasDeadline && time.Now().After(deadline) {
-			t.Logf("%s: timeout exceeded waiting for alerts (%d alerts not generated", scenario.Name, len(remainingAssertions))
+			t.Logf("%s: timeout exceeded waiting for alerts (%d alerts not generated)", scenario.Name, len(remainingAssertions))
 			break
 		}
 

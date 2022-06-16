@@ -1,8 +1,8 @@
-package e2e
+package threatest
 
 import (
-	. "github.com/datadog/e2e/pkg/e2e/detonators"
-	"github.com/datadog/e2e/pkg/e2e/matchers"
+	. "github.com/datadog/threatest/pkg/threatest/detonators"
+	"github.com/datadog/threatest/pkg/threatest/matchers"
 	"time"
 )
 

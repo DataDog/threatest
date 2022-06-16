@@ -1,21 +1,23 @@
 package e2e
 
 import (
+	. "github.com/datadog/e2e/pkg/e2e/detonators"
+	"github.com/datadog/e2e/pkg/e2e/matchers"
 	"time"
 )
 
 type Scenario struct {
 	Name       string
-	Detonator  DetonatorV2
+	Detonator  Detonator
 	Timeout    time.Duration
-	Assertions []AlertGeneratedAssertion
+	Assertions []matchers.AlertGeneratedMatcher
 }
 
 type ScenarioBuilder struct {
 	Scenario
 }
 
-func (m *ScenarioBuilder) WhenDetonating(detonation DetonatorV2) *ScenarioBuilder {
+func (m *ScenarioBuilder) WhenDetonating(detonation Detonator) *ScenarioBuilder {
 	m.Detonator = detonation
 	return m
 }
@@ -25,7 +27,7 @@ func (m *ScenarioBuilder) WithTimeout(timeout time.Duration) *ScenarioBuilder {
 	return m
 }
 
-func (m *ScenarioBuilder) Expect(assertion AlertGeneratedAssertion) *ScenarioBuilder {
+func (m *ScenarioBuilder) Expect(assertion matchers.AlertGeneratedMatcher) *ScenarioBuilder {
 	m.Assertions = append(m.Assertions, assertion)
 	return m
 }

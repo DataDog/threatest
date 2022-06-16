@@ -1,6 +1,7 @@
-package e2e
+package matchers
 
-type AlertGeneratedAssertion interface {
+type AlertGeneratedMatcher interface {
 	HasExpectedAlert(uid string) (bool, error)
+	String() string
 	Cleanup(uuid string) error
 }

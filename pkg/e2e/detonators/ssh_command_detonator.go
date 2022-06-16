@@ -1,4 +1,4 @@
-package e2e
+package detonators
 
 import (
 	"fmt"
@@ -8,32 +8,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 )
-
-type OSLayerAttackTechnique struct {
-	Command string
-}
-
-// TODO: "transport"? e.g. local vs. SSH vs. SSM
-type CommandExecutor interface {
-	Execute(command string) (string, error)
-}
-
-type LocalCommandExecutor struct{}
-
-func (m *LocalCommandExecutor) Execute(command string) (string, error) {
-	fmt.Println("Executing " + command)
-	id, _ := uuid.GenerateUUID()
-	_, err := exec.Command(fmt.Sprintf("CORRELATION_UUID=%s /bin/bash -c '%s'", id, command)).Output()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
 
 type SSHCommandExecutor struct {
 	SSHHostname   string
@@ -103,7 +81,7 @@ func (m *SSHCommandExecutor) init() error {
 	return nil
 }
 
-func (m *SSHCommandExecutor) Execute(command string) (string, error) {
+func (m *SSHCommandExecutor) RunCommand(command string) (string, error) {
 
 	session, err := m.SSHConnection.NewSession()
 	defer session.Close()
@@ -130,24 +108,4 @@ func (m *SSHCommandExecutor) Execute(command string) (string, error) {
 	}
 
 	return id, nil
-}
-
-type CommandDetonator struct {
-	Executor  CommandExecutor
-	Technique *OSLayerAttackTechnique
-}
-
-func NewCommandDetonator(executor CommandExecutor, command string) *CommandDetonator {
-	return &CommandDetonator{
-		Executor:  executor,
-		Technique: &OSLayerAttackTechnique{Command: command},
-	}
-}
-
-func (m *CommandDetonator) Detonate() (string, error) {
-	return m.Executor.Execute(m.Technique.Command)
-}
-
-type DetonatorV2 interface {
-	Detonate() (string, error)
 }

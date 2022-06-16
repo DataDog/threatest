@@ -2,9 +2,11 @@ package main
 
 import (
 	. "github.com/datadog/e2e/pkg/e2e"
-	. "github.com/datadog/e2e/pkg/integrations"
+	. "github.com/datadog/e2e/pkg/e2e/detonators"
+	. "github.com/datadog/e2e/pkg/e2e/matchers/datadog"
 	_ "github.com/datadog/stratus-red-team/pkg/stratus/loader" // Note: This import is needed
 	"testing"
+	"time"
 )
 
 func TestAlerts(t *testing.T) {
@@ -17,7 +19,8 @@ func TestAlerts(t *testing.T) {
 
 	runner.Scenario("curl to metadata service").
 		WhenDetonating(NewCommandDetonator(ssh, "curl http://169.254.169.254 --connect-timeout 5")).
-		Expect(DatadogSecuritySignal("EC2 Instance Metadata Service Accessed via Network Utility"))
+		Expect(DatadogSecuritySignal("EC2 Instance Metadata Service Accessed via Network Utility")).
+		Expect(DatadogSecuritySignal("foo")).WithTimeout(30 * time.Second)
 
 	runner.Scenario("Java spawning shell").
 		WhenDetonating(NewCommandDetonator(ssh, `cp /bin/bash /tmp/java; /tmp/java -c "curl 1.1.1.1"`)).

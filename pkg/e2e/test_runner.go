@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"github.com/datadog/e2e/pkg/e2e/matchers"
 	"strconv"
 	"testing"
 	"time"
@@ -48,7 +49,7 @@ func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
 	}
 
 	// Build a queue containing all assertions
-	remainingAssertions := make(chan AlertGeneratedAssertion, len(scenario.Assertions))
+	remainingAssertions := make(chan matchers.AlertGeneratedMatcher, len(scenario.Assertions))
 	for i := range scenario.Assertions {
 		remainingAssertions <- scenario.Assertions[i]
 	}
@@ -63,19 +64,19 @@ func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
 	hasDeadline := scenario.Timeout > 0
 	deadline := start.Add(scenario.Timeout)
 	for len(remainingAssertions) > 0 {
-		assertion := <-remainingAssertions
 		if hasDeadline && time.Now().After(deadline) {
-			t.Errorf("%s: timeout exceeded waiting for alert", scenario.Name)
-			return
+			t.Logf("%s: timeout exceeded waiting for alerts (%d alerts not generated", scenario.Name, len(remainingAssertions))
+			break
 		}
 
+		assertion := <-remainingAssertions
 		hasAlert, err := assertion.HasExpectedAlert(detonationUid)
 		if err != nil {
 			t.Error(err)
 		}
 		if hasAlert {
 			timeSpentStr := strconv.Itoa(int(time.Since(start).Seconds()))
-			t.Logf("%s: Confirmed that the expected signal was created in Datadog (took %s seconds).\n", scenario.Name, timeSpentStr)
+			t.Logf("%s: Confirmed that the expected signal (%s) was created in Datadog (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
 		} else {
 			// requeue assertion
 			remainingAssertions <- assertion
@@ -84,7 +85,12 @@ func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
 	}
 
 	if numRemainingAssertions := len(remainingAssertions); numRemainingAssertions > 0 {
-		t.Errorf("%s: %d assertions did not pass", scenario.Name, numRemainingAssertions)
+		t.Logf("%s: %d assertions did not pass", scenario.Name, numRemainingAssertions)
+		for i := 0; i < numRemainingAssertions; i++ {
+			assertion := <-remainingAssertions
+			t.Logf("=> Did not find %s", assertion)
+		}
+		t.Fail()
 	} else {
 		t.Logf("%s: All assertions passed", scenario.Name)
 	}

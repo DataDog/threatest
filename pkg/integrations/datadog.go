@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -60,37 +61,40 @@ func (m *DatadogAlertGeneratedAssertionBuilder) Cleanup(uid string) error {
 }
 
 func (m DatadogAlertGeneratedAssertion) HasExpectedAlert(executionUid string) (bool, error) {
-	// TODO cache signal IDs and exclude them in the search?
-	query := m.buildDatadogSignalQuery(executionUid)
+	// TODO cache signal IDs and exclude them in the search to avoid checking multiple times the same signal
+	query := m.buildDatadogSignalQuery()
 	signals, err := m.findSignals(query)
 	if err != nil {
 		return false, errors.New("unable to search for Datadog security signal: " + err.Error())
 	}
 
-	numSignals := len(signals)
-	fmt.Printf("%s => %d signals\n", query, numSignals)
-	if numSignals == 0 {
+	if len(signals) == 0 {
 		return false, nil
-	} else if numSignals == 1 {
-		return true, nil
-	} else /* numSignals > 1 */ {
-		fmt.Println("Warning: multiple matching signals found")
-		return true, nil
 	}
+
+	for i := range signals {
+		signal := signals[i]
+		if m.signalMatchesExecution(signal, executionUid) { //TODO low-prio unify naming of "uuid"/"uid"
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (m DatadogAlertGeneratedAssertion) Cleanup(uid string) error {
 	signals, err := m.findSignals(fmt.Sprintf(
-		`@workflow.triage.state:open @http.useragent:("stratus-red-team_%s" OR *stratus-red-team_%s*)`, uid, uid,
+		`@workflow.triage.state:open`,
 	))
 	if err != nil {
 		return errors.New("unable to search for Datadog security monitoring signals: " + err.Error())
 	}
 
 	for i := range signals {
-		fmt.Println("Archiving signal " + *signals[i].Id)
-		if err := m.closeAlert(*signals[i].Id); err != nil {
-			return errors.New("unable to archive signal " + *signals[i].Id + ": " + err.Error())
+		if m.signalMatchesExecution(signals[i], uid) {
+			fmt.Println("Archiving signal " + *signals[i].Id)
+			if err := m.closeAlert(*signals[i].Id); err != nil {
+				return errors.New("unable to archive signal " + *signals[i].Id + ": " + err.Error())
+			}
 		}
 	}
 
@@ -101,7 +105,7 @@ func (m DatadogAlertGeneratedAssertion) closeAlert(alertId string) error {
 	payload, _ := json.Marshal(map[string]interface{}{
 		"state":          "archived",
 		"archiveReason":  "testing_or_maintenance",
-		"archiveComment": "Stratus Red Team",
+		"archiveComment": "End to end detection testing",
 	})
 	req, err := http.NewRequest(
 		http.MethodPatch,
@@ -128,16 +132,15 @@ func (m DatadogAlertGeneratedAssertion) closeAlert(alertId string) error {
 	return nil
 }
 
-func (m DatadogAlertGeneratedAssertion) buildDatadogSignalQuery(uid string) string {
+func (m DatadogAlertGeneratedAssertion) buildDatadogSignalQuery() string {
 	severityQuery := ""
 	if m.AlertFilter.Severity != "" {
 		severityQuery = fmt.Sprintf("status:%s ", m.AlertFilter.Severity)
 	}
 	return fmt.Sprintf(
-		`@workflow.triage.state:open @workflow.rule.name:"%s" %s@http.useragent:"stratus-red-team_%s"`,
+		`@workflow.triage.state:open @workflow.rule.name:"%s" %s`,
 		m.AlertFilter.RuleName,
 		severityQuery,
-		uid,
 	)
 }
 
@@ -157,4 +160,10 @@ func (m DatadogAlertGeneratedAssertion) findSignals(query string) ([]datadog.Sec
 	logger.SetOutput(os.Stdout) // restore proper logging
 
 	return signals.Data, err
+}
+
+func (m DatadogAlertGeneratedAssertion) signalMatchesExecution(signal datadog.SecurityMonitoringSignal, uid string) bool {
+	buf, _ := json.Marshal(signal.Attributes.Attributes)
+	rawSignal := string(buf)
+	return strings.Contains(rawSignal, uid)
 }

@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"errors"
 	"fmt"
 	"github.com/datadog/stratus-red-team/pkg/stratus"
 	stratusrunner "github.com/datadog/stratus-red-team/pkg/stratus/runner"
@@ -14,23 +13,24 @@ type Detonator interface {
 	Detonate(string) (string, error)
 }
 
-func StratusRedTeam() *StratusRedTeamDetonator {
-	return &StratusRedTeamDetonator{}
+func StratusRedTeamTechnique(ttp string) *StratusRedTeamDetonator {
+	return &StratusRedTeamDetonator{
+		Technique: stratus.GetRegistry().GetAttackTechniqueByName(ttp),
+	}
 }
 
-type StratusRedTeamDetonator struct{}
+type StratusRedTeamDetonator struct {
+	Technique *stratus.AttackTechnique
+}
 
 // todo separate pkg from logic
 
-func (m *StratusRedTeamDetonator) Detonate(attackTechnique string) (string, error) {
+func (m *StratusRedTeamDetonator) Detonate() (string, error) {
 	// detonate a specific stratus red team TTP
-	ttp := stratus.GetRegistry().GetAttackTechniqueByName(attackTechnique)
-	if ttp == nil {
-		return "", errors.New("unknown attack technique " + attackTechnique)
-	}
+	ttp := m.Technique
 	stratusRunner := stratusrunner.NewRunner(ttp, stratusrunner.StratusRunnerNoForce)
 
-	fmt.Println("Detonating '" + attackTechnique + "' with Stratus Red Team")
+	fmt.Println("Detonating '" + m.Technique.ID + "' with Stratus Red Team")
 
 	log.Default().SetOutput(io.Discard) // suppress output
 	defer func() {

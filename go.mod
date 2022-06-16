@@ -3,9 +3,10 @@ module github.com/datadog/e2e
 require (
 	github.com/DataDog/datadog-api-client-go v1.14.0
 	github.com/datadog/stratus-red-team v1.8.0
+	github.com/hashicorp/go-uuid v1.0.0
+	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351
+	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
 )
-
-replace github.com/datadog/stratus-red-team => ../stratus-red-team
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.0.0 // indirect
@@ -62,7 +63,6 @@ require (
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/zclconf/go-cty v1.9.1 // indirect
-	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88 // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/sys v0.0.0-20220517195934-5e4e11fc645e // indirect

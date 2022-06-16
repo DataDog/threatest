@@ -5,8 +5,8 @@ import (
 	. "github.com/datadog/threatest/pkg/threatest"
 	. "github.com/datadog/threatest/pkg/threatest/detonators"
 	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog"
+	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 func TestAlerts(t *testing.T) {
@@ -19,8 +19,7 @@ func TestAlerts(t *testing.T) {
 
 	runner.Scenario("curl to metadata service").
 		WhenDetonating(NewCommandDetonator(ssh, "curl http://169.254.169.254 --connect-timeout 5")).
-		Expect(DatadogSecuritySignal("EC2 Instance Metadata Service Accessed via Network Utility")).
-		Expect(DatadogSecuritySignal("foo")).WithTimeout(30 * time.Second)
+		Expect(DatadogSecuritySignal("EC2 Instance Metadata Service Accessed via Network Utility"))
 
 	runner.Scenario("Java spawning shell").
 		WhenDetonating(NewCommandDetonator(ssh, `cp /bin/bash /tmp/java; /tmp/java -c "curl 1.1.1.1"`)).
@@ -36,8 +35,7 @@ func TestAlerts(t *testing.T) {
 	WhenDetonating(StratusRedTeamTechnique("aws.persistence.iam-create-admin-user")).
 	Expect(DatadogSecuritySignal("An IAM user was created")).
 	WithTimeout(10 * time.Minute)*/
-
-	runner.Run(t)
+	require.Nil(t, runner.Run())
 
 	//TODO: Problem, all assertions for a given platform are executed independently
 	// This means we hit the same API and get the same results a lot of times

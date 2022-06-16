@@ -1,9 +1,11 @@
 package threatest
 
 import (
+	"errors"
+	"fmt"
 	"github.com/datadog/threatest/pkg/threatest/matchers"
+	"log"
 	"strconv"
-	"testing"
 	"time"
 )
 
@@ -24,16 +26,15 @@ func (m *TestRunner) Add(scenario *ScenarioBuilder) {
 	m.Scenarios = append(m.Scenarios, scenario.Build())
 }
 
-func (m *TestRunner) Run(t *testing.T) {
+func (m *TestRunner) Run() error {
 	m.buildScenarios()
 	for i := range m.Scenarios {
 		scenario := m.Scenarios[i]
-		t.Run(scenario.Name, func(t *testing.T) {
-			// TODO parallel
-			t.Parallel()
-			m.runScenario(t, scenario)
-		})
+		if err := m.runScenario(scenario); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (m *TestRunner) buildScenarios() {
@@ -44,18 +45,16 @@ func (m *TestRunner) buildScenarios() {
 	}
 }
 
-func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
+func (m *TestRunner) runScenario(scenario *Scenario) error {
 	detonationUid, err := scenario.Detonator.Detonate()
 	if err != nil {
-		t.Error(err)
-		return
+		return err
 	}
 	start := time.Now()
 	const interval = 2 * time.Second
 
 	if len(scenario.Assertions) == 0 {
-		t.Log("No assertion, test passed")
-		return
+		return nil
 	}
 
 	// Build a queue containing all assertions
@@ -64,29 +63,24 @@ func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
 		remainingAssertions <- scenario.Assertions[i]
 	}
 
-	defer func() {
-		err := scenario.Assertions[0].Cleanup(detonationUid)
-		if err != nil {
-			t.Log("warning: failed to clean up generated signals: " + err.Error())
-		}
-	}() // TODO: this shouldn't be specific to a single assertion
+	defer m.CleanupScenario(scenario, detonationUid)
 
 	hasDeadline := scenario.Timeout > 0
 	deadline := start.Add(scenario.Timeout)
 	for len(remainingAssertions) > 0 {
 		if hasDeadline && time.Now().After(deadline) {
-			t.Logf("%s: timeout exceeded waiting for alerts (%d alerts not generated)", scenario.Name, len(remainingAssertions))
+			log.Println("%s: timeout exceeded waiting for alerts (%d alerts not generated)", scenario.Name, len(remainingAssertions))
 			break
 		}
 
 		assertion := <-remainingAssertions
 		hasAlert, err := assertion.HasExpectedAlert(detonationUid)
 		if err != nil {
-			t.Error(err)
+			return err
 		}
 		if hasAlert {
 			timeSpentStr := strconv.Itoa(int(time.Since(start).Seconds()))
-			t.Logf("%s: Confirmed that the expected signal (%s) was created in Datadog (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
+			log.Printf("%s: Confirmed that the expected signal (%s) was created in Datadog (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
 		} else {
 			// requeue assertion
 			remainingAssertions <- assertion
@@ -95,21 +89,23 @@ func (m *TestRunner) runScenario(t *testing.T, scenario *Scenario) {
 	}
 
 	if numRemainingAssertions := len(remainingAssertions); numRemainingAssertions > 0 {
-		t.Logf("%s: %d assertions did not pass", scenario.Name, numRemainingAssertions)
+		errText := fmt.Sprintf("%s: %d assertions did not pass", scenario.Name, numRemainingAssertions)
 		for i := 0; i < numRemainingAssertions; i++ {
 			assertion := <-remainingAssertions
-			t.Logf("=> Did not find %s", assertion)
+			errText += fmt.Sprintf("\n => Did not find %s", assertion)
 		}
-		t.Fail()
+		return errors.New(errText)
 	} else {
-		t.Logf("%s: All assertions passed", scenario.Name)
+		log.Printf("%s: All assertions passed\n", scenario.Name)
 	}
+
+	return nil
 }
 
-func (m *TestRunner) CleanupScenario(t *testing.T, scenario *Scenario, detonationUid string) {
+func (m *TestRunner) CleanupScenario(scenario *Scenario, detonationUid string) {
 	err := scenario.Assertions[0].Cleanup(detonationUid)
 	if err != nil {
-		t.Log("warning: failed to clean up generated signals: " + err.Error())
+		log.Println("warning: failed to clean up generated signals: " + err.Error())
 	}
 	// TODO: this shouldn't be specific to a single assertion?
 }

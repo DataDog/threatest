@@ -91,7 +91,6 @@ func (m DatadogAlertGeneratedAssertion) Cleanup(uid string) error {
 
 	for i := range signals {
 		if m.signalMatchesExecution(signals[i], uid) {
-			fmt.Println("Archiving signal " + *signals[i].Id)
 			if err := m.closeAlert(*signals[i].Id); err != nil {
 				return errors.New("unable to archive signal " + *signals[i].Id + ": " + err.Error())
 			}

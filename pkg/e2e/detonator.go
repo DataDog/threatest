@@ -4,14 +4,7 @@ import (
 	"fmt"
 	"github.com/datadog/stratus-red-team/pkg/stratus"
 	stratusrunner "github.com/datadog/stratus-red-team/pkg/stratus/runner"
-	"io"
-	"log"
-	"os"
 )
-
-type Detonator interface {
-	Detonate(string) (string, error)
-}
 
 func StratusRedTeamTechnique(ttp string) *StratusRedTeamDetonator {
 	return &StratusRedTeamDetonator{
@@ -32,11 +25,7 @@ func (m *StratusRedTeamDetonator) Detonate() (string, error) {
 
 	fmt.Println("Detonating '" + m.Technique.ID + "' with Stratus Red Team")
 
-	log.Default().SetOutput(io.Discard) // suppress output
-	defer func() {
-		stratusRunner.CleanUp()
-		log.Default().SetOutput(os.Stdout) // restore logging
-	}()
+	defer stratusRunner.CleanUp()
 
 	_, err := stratusRunner.WarmUp()
 	if err != nil {

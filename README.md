@@ -1,3 +1,5 @@
+**Note**: This repository is pending rename and is _not_ specific to Stratus Red Team
+
 # Threatest
 
 Threatest is a Go framework for testing threat detection end-to-end.

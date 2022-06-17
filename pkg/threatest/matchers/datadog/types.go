@@ -13,8 +13,7 @@ type DatadogAlertFilter struct {
 }
 
 type DatadogAlertGeneratedAssertion struct {
-	apiClient   *datadog.APIClient
-	ctx         context.Context
+	SignalsAPI  DatadogSecuritySignalsAPI
 	AlertFilter *DatadogAlertFilter
 }
 
@@ -22,6 +21,8 @@ type DatadogAlertGeneratedAssertion struct {
 type DatadogAlertGeneratedAssertionBuilder struct {
 	DatadogAlertGeneratedAssertion
 }
+
+//TODO better file structure
 
 func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
 	builder := &DatadogAlertGeneratedAssertionBuilder{}
@@ -33,8 +34,11 @@ func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
 	})
 	cfg := datadog.NewConfiguration()
 	cfg.SetUnstableOperationEnabled("SearchSecurityMonitoringSignals", true)
-	builder.apiClient = datadog.NewAPIClient(cfg)
-	builder.ctx = ctx
+
+	builder.SignalsAPI = &DatadogSecuritySignalsAPIImpl{
+		apiClient: datadog.NewAPIClient(cfg),
+		ctx:       ctx,
+	}
 	builder.AlertFilter = &DatadogAlertFilter{RuleName: name}
 	return builder
 }

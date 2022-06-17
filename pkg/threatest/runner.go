@@ -12,6 +12,11 @@ import (
 type TestRunner struct {
 	Builders  []*ScenarioBuilder
 	Scenarios []*Scenario
+	Interval  time.Duration
+}
+
+func NewTestRunner() *TestRunner {
+	return &TestRunner{Interval: 2 * time.Second}
 }
 
 func (m *TestRunner) Scenario(name string) *ScenarioBuilder {
@@ -50,6 +55,9 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 	if err != nil {
 		return err
 	}
+	//TODO: When to clean? If we don't wait a bit, we risk missing signals that were generated after our assertion matched
+	defer m.CleanupScenario(scenario, detonationUid)
+
 	start := time.Now()
 	const interval = 2 * time.Second
 
@@ -63,13 +71,11 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 		remainingAssertions <- scenario.Assertions[i]
 	}
 
-	defer m.CleanupScenario(scenario, detonationUid)
-
 	hasDeadline := scenario.Timeout > 0
 	deadline := start.Add(scenario.Timeout)
 	for len(remainingAssertions) > 0 {
 		if hasDeadline && time.Now().After(deadline) {
-			log.Println("%s: timeout exceeded waiting for alerts (%d alerts not generated)", scenario.Name, len(remainingAssertions))
+			log.Printf("%s: timeout exceeded waiting for alerts (%d alerts not generated)\n", scenario.Name, len(remainingAssertions))
 			break
 		}
 
@@ -84,7 +90,7 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 		} else {
 			// requeue assertion
 			remainingAssertions <- assertion
-			time.Sleep(interval)
+			time.Sleep(m.Interval)
 		}
 	}
 
@@ -103,6 +109,10 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 }
 
 func (m *TestRunner) CleanupScenario(scenario *Scenario, detonationUid string) {
+	if len(scenario.Assertions) == 0 {
+		return
+	}
+
 	err := scenario.Assertions[0].Cleanup(detonationUid)
 	if err != nil {
 		log.Println("warning: failed to clean up generated signals: " + err.Error())

@@ -99,7 +99,9 @@ func (m *SSHCommandExecutor) RunCommand(command string) (string, error) {
 	}
 
 	id, _ := uuid.GenerateUUID()
-	if err := session.Run(FormatCommand(command, id)); err != nil {
+	finalCommand := FormatCommand(command, id)
+	println("Running remote command: " + finalCommand)
+	if err := session.Run(finalCommand); err != nil {
 		return "", err
 	}
 

@@ -11,18 +11,18 @@ import (
 )
 
 func TestCloudSIEMAWSAlerts(t *testing.T) {
-	runner := TestRunner{}
+	threatest := Threatest()
 
-	runner.Scenario("AWS console login").
+	threatest.Scenario("AWS console login").
 		WhenDetonating(StratusRedTeamTechnique("aws.initial-access.console-login-without-mfa")).
 		Expect(DatadogSecuritySignal("AWS Console login without MFA").WithSeverity("medium")).
 		Expect(DatadogSecuritySignal("An IAM user was created")).
 		WithTimeout(10 * time.Minute)
 
-	runner.Scenario("AWS persistence IAM user").
+	threatest.Scenario("AWS persistence IAM user").
 		WhenDetonating(StratusRedTeamTechnique("aws.persistence.iam-create-admin-user")).
 		Expect(DatadogSecuritySignal("An IAM user was created")).
 		WithTimeout(10 * time.Minute)
 
-	require.Nil(t, runner.Run())
+	require.Nil(t, threatest.Run())
 }

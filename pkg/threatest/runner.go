@@ -15,7 +15,7 @@ type TestRunner struct {
 	Interval  time.Duration
 }
 
-func NewTestRunner() *TestRunner {
+func Threatest() *TestRunner {
 	return &TestRunner{Interval: 2 * time.Second}
 }
 

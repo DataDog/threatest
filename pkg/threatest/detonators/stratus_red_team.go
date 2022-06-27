@@ -16,8 +16,6 @@ type StratusRedTeamDetonator struct {
 	Technique *stratus.AttackTechnique
 }
 
-// todo separate pkg from logic
-
 func (m *StratusRedTeamDetonator) Detonate() (string, error) {
 	// detonate a specific stratus red team TTP
 	ttp := m.Technique
@@ -27,14 +25,13 @@ func (m *StratusRedTeamDetonator) Detonate() (string, error) {
 
 	defer stratusRunner.CleanUp()
 
-	_, err := stratusRunner.WarmUp()
-	if err != nil {
+	if _, err := stratusRunner.WarmUp(); err != nil {
 		return "", err
 	}
-	err = stratusRunner.Detonate()
-	if err != nil {
+	if err := stratusRunner.Detonate(); err != nil {
 		return "", err
 	}
+
 	return stratusRunner.GetUniqueExecutionId(), nil
 
 }

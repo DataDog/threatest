@@ -22,8 +22,6 @@ type DatadogAlertGeneratedAssertionBuilder struct {
 	DatadogAlertGeneratedAssertion
 }
 
-//TODO better file structure
-
 func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
 	builder := &DatadogAlertGeneratedAssertionBuilder{}
 	ddApiKey := os.Getenv("DD_API_KEY")

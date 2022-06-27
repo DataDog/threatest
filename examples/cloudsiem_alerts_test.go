@@ -12,6 +12,7 @@ import (
 
 func TestCloudSIEMAWSAlerts(t *testing.T) {
 	threatest := Threatest()
+	threatest.Interval = 0
 
 	threatest.Scenario("AWS console login").
 		WhenDetonating(StratusRedTeamTechnique("aws.initial-access.console-login-without-mfa")).

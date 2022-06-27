@@ -7,10 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
-	"io"
-	"log"
+	"github.com/aws/smithy-go/ptr"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -31,20 +29,21 @@ type DatadogSecuritySignalsAPIImpl struct {
 }
 
 func (m *DatadogSecuritySignalsAPIImpl) SearchSignals(query string) ([]datadog.SecurityMonitoringSignal, error) {
+	maxSignals := 1000
 	params := datadog.NewSearchSecurityMonitoringSignalsOptionalParameters().WithBody(datadog.SecurityMonitoringSignalListRequest{
 		Filter: &datadog.SecurityMonitoringSignalListRequestFilter{
 			From:  datadog.PtrTime(time.Now().Add(-1 * time.Hour)), // Signals no older than 1 hour
 			Query: datadog.PtrString(query),
 		},
-		Page: &datadog.SecurityMonitoringSignalListRequestPage{Limit: datadog.PtrInt32(1000)}, // TODO
+		Page: &datadog.SecurityMonitoringSignalListRequestPage{Limit: ptr.Int32(int32(maxSignals))},
 		Sort: datadog.SECURITYMONITORINGSIGNALSSORT_TIMESTAMP_DESCENDING.Ptr(),
 	})
 
-	logger := log.Default()
-	logger.SetOutput(io.Discard) // suppress annoying warning output
 	signals, _, err := m.apiClient.SecurityMonitoringApi.SearchSecurityMonitoringSignals(m.ctx, *params)
-	logger.SetOutput(os.Stdout) // restore proper logging
 
+	if len(signals.Data) >= maxSignals {
+		return nil, errors.New("unsupported: more than 1000 open signals") // todo: paginate response
+	}
 	return signals.Data, err
 }
 
@@ -79,16 +78,16 @@ func (m *DatadogSecuritySignalsAPIImpl) CloseSignal(id string) error {
 	return nil
 }
 
-func (m *DatadogAlertGeneratedAssertionBuilder) HasExpectedAlert(executionUid string) (bool, error) {
-	return m.DatadogAlertGeneratedAssertion.HasExpectedAlert(executionUid)
+func (m *DatadogAlertGeneratedAssertionBuilder) HasExpectedAlert(detonationUuid string) (bool, error) {
+	return m.DatadogAlertGeneratedAssertion.HasExpectedAlert(detonationUuid)
 }
 
-func (m *DatadogAlertGeneratedAssertionBuilder) Cleanup(uid string) error {
-	return m.DatadogAlertGeneratedAssertion.Cleanup(uid)
+func (m *DatadogAlertGeneratedAssertionBuilder) Cleanup(detonationUuid string) error {
+	return m.DatadogAlertGeneratedAssertion.Cleanup(detonationUuid)
 }
 
-func (m *DatadogAlertGeneratedAssertion) HasExpectedAlert(executionUid string) (bool, error) {
-	// TODO cache signal IDs and exclude them in the search to avoid checking multiple times the same signal
+func (m *DatadogAlertGeneratedAssertion) HasExpectedAlert(detonationUuid string) (bool, error) {
+	// Possible improvement: cache signal IDs and exclude them in the search to avoid checking multiple times the same signal
 	query := m.buildDatadogSignalQuery()
 	signals, err := m.SignalsAPI.SearchSignals(query)
 	if err != nil {
@@ -100,7 +99,7 @@ func (m *DatadogAlertGeneratedAssertion) HasExpectedAlert(executionUid string) (
 	}
 
 	for i := range signals {
-		if m.signalMatchesExecution(signals[i], executionUid) { //TODO low-prio unify naming of "uuid"/"uid"
+		if m.signalMatchesExecution(signals[i], detonationUuid) { //TODO low-prio unify naming of "uuid"/"uid"
 			return true, nil
 		}
 	}
@@ -112,14 +111,14 @@ func (m *DatadogAlertGeneratedAssertion) String() string {
 	return fmt.Sprintf("Datadog security signal '%s'", m.AlertFilter.RuleName)
 }
 
-func (m *DatadogAlertGeneratedAssertion) Cleanup(uid string) error {
+func (m *DatadogAlertGeneratedAssertion) Cleanup(detonationUuid string) error {
 	signals, err := m.SignalsAPI.SearchSignals(QueryAllOpenSignals)
 	if err != nil {
 		return errors.New("unable to search for Datadog security monitoring signals: " + err.Error())
 	}
 
 	for i := range signals {
-		if m.signalMatchesExecution(signals[i], uid) {
+		if m.signalMatchesExecution(signals[i], detonationUuid) {
 			if err := m.SignalsAPI.CloseSignal(*signals[i].Id); err != nil {
 				return errors.New("unable to archive signal " + *signals[i].Id + ": " + err.Error())
 			}

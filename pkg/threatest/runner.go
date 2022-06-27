@@ -33,6 +33,8 @@ func (m *TestRunner) Add(scenario *ScenarioBuilder) {
 
 func (m *TestRunner) Run() error {
 	m.buildScenarios()
+
+	// Run every scenario one by one
 	for i := range m.Scenarios {
 		scenario := m.Scenarios[i]
 		if err := m.runScenario(scenario); err != nil {
@@ -59,7 +61,6 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 	defer m.CleanupScenario(scenario, detonationUid)
 
 	start := time.Now()
-	const interval = 2 * time.Second
 
 	if len(scenario.Assertions) == 0 {
 		return nil
@@ -117,5 +118,5 @@ func (m *TestRunner) CleanupScenario(scenario *Scenario, detonationUid string) {
 	if err != nil {
 		log.Println("warning: failed to clean up generated signals: " + err.Error())
 	}
-	// TODO: this shouldn't be specific to a single assertion?
+	// TODO (code smell): this shouldn't be specific to a single assertion?
 }

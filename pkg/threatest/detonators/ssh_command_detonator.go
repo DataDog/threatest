@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/kevinburke/ssh_config"
 	"golang.org/x/crypto/ssh"
-	"gopkg.in/alessio/shellescape.v1"
 	"io/ioutil"
 	"log"
 	"net"
@@ -100,8 +99,7 @@ func (m *SSHCommandExecutor) RunCommand(command string) (string, error) {
 	}
 
 	id, _ := uuid.GenerateUUID()
-	finalCommand := fmt.Sprintf(`export %s=%s; bash -c %s || true`, id, id, shellescape.Quote(command))
-	if err := session.Run(finalCommand); err != nil {
+	if err := session.Run(FormatCommand(command, id)); err != nil {
 		return "", err
 	}
 

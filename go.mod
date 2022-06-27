@@ -2,11 +2,13 @@ module github.com/datadog/threatest
 
 require (
 	github.com/DataDog/datadog-api-client-go v1.14.0
+	github.com/aws/smithy-go v1.10.0
 	github.com/datadog/stratus-red-team v1.8.0
 	github.com/hashicorp/go-uuid v1.0.0
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
+	gopkg.in/alessio/shellescape.v1 v1.0.0-20170105083845-52074bc9df61
 )
 
 replace github.com/datadog/stratus-red-team => ../stratus-red-team
@@ -18,6 +20,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.0.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.4.0 // indirect
+	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.13.0 // indirect
@@ -40,7 +43,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.14.0 // indirect
-	github.com/aws/smithy-go v1.10.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.2.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect

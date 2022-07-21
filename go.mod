@@ -2,16 +2,14 @@ module github.com/datadog/threatest
 
 require (
 	github.com/DataDog/datadog-api-client-go v1.14.0
-	github.com/aws/smithy-go v1.10.0
-	github.com/datadog/stratus-red-team v1.8.0
+	github.com/aws/smithy-go v1.12.0
+	github.com/datadog/stratus-red-team/v2 v2.2.2-0.20220721091143-294f96a01ec7
 	github.com/hashicorp/go-uuid v1.0.0
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
 	gopkg.in/alessio/shellescape.v1 v1.0.0-20170105083845-52074bc9df61
 )
-
-replace github.com/datadog/stratus-red-team => ../stratus-red-team
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.0.0 // indirect
@@ -21,13 +19,13 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.0.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.4.0 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.16.7 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.10.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.2.0 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.14 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.26.0 // indirect
@@ -38,6 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.12.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.16.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.23.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.20.0 // indirect

@@ -4,7 +4,7 @@ import (
 	"github.com/datadog/threatest/pkg/threatest/matchers/datadog"
 	"testing"
 
-	_ "github.com/datadog/stratus-red-team/pkg/stratus/loader" // Note: This import is needed
+	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/loader" // Note: This import is needed
 	. "github.com/datadog/threatest/pkg/threatest"
 	. "github.com/datadog/threatest/pkg/threatest/detonators"
 )

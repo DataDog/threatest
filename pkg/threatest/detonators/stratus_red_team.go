@@ -2,8 +2,9 @@ package detonators
 
 import (
 	"fmt"
-	"github.com/datadog/stratus-red-team/pkg/stratus"
-	stratusrunner "github.com/datadog/stratus-red-team/pkg/stratus/runner"
+	"github.com/datadog/stratus-red-team/v2/pkg/stratus"
+	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/loader"
+	stratusrunner "github.com/datadog/stratus-red-team/v2/pkg/stratus/runner"
 )
 
 func StratusRedTeamTechnique(ttp string) *StratusRedTeamDetonator {

@@ -7,7 +7,7 @@ import (
 
 func FormatCommand(rawCommand string, detonationUuid string) string {
 	return fmt.Sprintf(
-		`export %[1]s=%[1]s; bash -c %[2]s || true`,
+		`cp /bin/bash /tmp/%[1]s; (/tmp/%[1]s -c %[2]s || true) && rm /tmp/%[1]s`,
 		detonationUuid, shellescape.Quote(rawCommand),
 	)
 }

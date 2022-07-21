@@ -1,13 +1,12 @@
 package examples
 
 import (
-	"testing"
-
 	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/loader" // Note: This import is needed
 	. "github.com/datadog/threatest/pkg/threatest"
 	. "github.com/datadog/threatest/pkg/threatest/detonators"
 	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 /*
@@ -45,10 +44,9 @@ func TestCWSAlertsV2(t *testing.T) {
 		{"curl to metadata service", "curl http://169.254.169.254 --connect-timeout 5", "EC2 Instance Metadata Service Accessed via Network Utility"},
 		{"java spawns shell", `cp /bin/bash /tmp/java; /tmp/java -c "curl 1.1.1.1"`, "Java process spawned shell/utility"},
 	}
-
 	ssh, err := NewSSHCommandExecutor("test-box", "", "")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Unable to connect over SSH: " + err.Error())
 	}
 
 	for i := range testCases {

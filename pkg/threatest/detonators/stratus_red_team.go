@@ -33,6 +33,9 @@ func (m *StratusRedTeamDetonator) Detonate() (string, error) {
 		return "", err
 	}
 
-	return stratusRunner.GetUniqueExecutionId(), nil
+	executionId := stratusRunner.GetUniqueExecutionId()
+	fmt.Println("Execution ID:" + executionId)
+
+	return executionId, nil
 
 }

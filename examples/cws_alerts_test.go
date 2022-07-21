@@ -7,6 +7,7 @@ import (
 	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 /*
@@ -43,6 +44,11 @@ func TestCWSAlertsV2(t *testing.T) {
 	}{
 		{"curl to metadata service", "curl http://169.254.169.254 --connect-timeout 5", "EC2 Instance Metadata Service Accessed via Network Utility"},
 		{"java spawns shell", `cp /bin/bash /tmp/java; /tmp/java -c "curl 1.1.1.1"`, "Java process spawned shell/utility"},
+		{"creating a new user", `sudo useradd -M rick; sudo userdel rick`, "User Created Interactively"},
+		{"requesting a paste site", `curl https://pastebin.com/raw/8UGTX14N`, "DNS Lookup Made for Paste Site"},
+		{"using passwd", `passwd --status $(whoami)`, "Passwd utility executed"},
+		//{"usage of nmap", `cp $(which echo) /tmp/nmap; /tmp/nmap -T4 -sT 10.0.0.0/24; rm /tmp/nmap`, "Nmap Execution Detected"},
+		//{"python inline command", `python3 -c 'import pty; pty.spawn("/bin/sh")'`, "Python executed with suspicious arguments"},
 	}
 	ssh, err := NewSSHCommandExecutor("test-box", "", "")
 	if err != nil {
@@ -54,7 +60,7 @@ func TestCWSAlertsV2(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 			threatest := Threatest()
-			threatest.Scenario(test.Name).WhenDetonating(NewCommandDetonator(ssh, test.Command)).Expect(DatadogSecuritySignal(test.ExpectedSignalName))
+			threatest.Scenario(test.Name).WhenDetonating(NewCommandDetonator(ssh, test.Command)).Expect(DatadogSecuritySignal(test.ExpectedSignalName)).WithTimeout(1 * time.Minute)
 			require.Nil(t, threatest.Run())
 		})
 	}

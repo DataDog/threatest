@@ -166,6 +166,8 @@ github.com/datadog/stratus-red-team v1.8.0 h1:4PQlbHgLuGbWOaXrZxGZ09c4BraPvm9bh3
 github.com/datadog/stratus-red-team v1.8.0/go.mod h1:Bt6kXE01JJ1WomgFbOhNoT8t2XuuUvJVCHjvccgk5F4=
 github.com/datadog/stratus-red-team/v2 v2.2.2-0.20220721091143-294f96a01ec7 h1:iYLC5e8HtJLNwsTUDgT54CVDXKzPmOEWafrs6ZXlYSs=
 github.com/datadog/stratus-red-team/v2 v2.2.2-0.20220721091143-294f96a01ec7/go.mod h1:E0MS367J7e0ezmQdqJdIN2krj+51zjw+O83WtKlgos0=
+github.com/datadog/stratus-red-team/v2 v2.2.3 h1:0KUGKs1H4/5ZmljVHDirThcBjtu1Fja9rzMbhoCK8+o=
+github.com/datadog/stratus-red-team/v2 v2.2.3/go.mod h1:lE1XRYMP4tnJmUWUgRq5ZjDCoy8ULI8BK9zG2rX7Ni8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

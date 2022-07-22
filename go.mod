@@ -3,7 +3,6 @@ module github.com/datadog/threatest
 require (
 	github.com/DataDog/datadog-api-client-go v1.14.0
 	github.com/aws/smithy-go v1.12.0
-	github.com/datadog/stratus-red-team/v2 v2.2.2-0.20220721091143-294f96a01ec7
 	github.com/hashicorp/go-uuid v1.0.0
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351
 	github.com/stretchr/testify v1.7.0
@@ -42,6 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.14.0 // indirect
+	github.com/datadog/stratus-red-team/v2 v2.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.2.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect

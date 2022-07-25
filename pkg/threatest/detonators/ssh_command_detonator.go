@@ -6,9 +6,11 @@ import (
 	"github.com/kevinburke/ssh_config"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
-	"log"
 	"net"
+	"os/user"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -52,14 +54,21 @@ func (m *SSHCommandExecutor) init() error {
 		sshPort, _ = strconv.Atoi(port)
 	}
 
+	sshKey, err := resolveSSHKeyPath(sshKey)
+	if err != nil {
+		return fmt.Errorf("unable to resolve path of private key at %s: %v", sshKey, err)
+	}
+
 	pemBytes, err := ioutil.ReadFile(sshKey)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("unable to read private key file at %s: %v", sshKey, err)
 	}
+
 	signer, err := ssh.ParsePrivateKey(pemBytes)
 	if err != nil {
-		log.Fatalf("parse key failed:%v", err)
+		return fmt.Errorf("unable to parse private key file at %s: %v", sshKey, err)
 	}
+
 	var config = &ssh.ClientConfig{
 		Config:          ssh.Config{},
 		User:            sshUser,
@@ -69,9 +78,10 @@ func (m *SSHCommandExecutor) init() error {
 	}
 
 	fmt.Println("Connecting over SSH")
-	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", realHostname, sshPort), config)
+	sshAddress := fmt.Sprintf("%s:%d", realHostname, sshPort)
+	conn, err := ssh.Dial("tcp", sshAddress, config)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to establish SSH connection to %s: %v", sshAddress, err)
 	}
 
 	fmt.Println("Connection succeeded")
@@ -106,4 +116,15 @@ func (m *SSHCommandExecutor) RunCommand(command string) (string, error) {
 	}
 
 	return id, nil
+}
+
+func resolveSSHKeyPath(path string) (string, error) {
+	if strings.HasPrefix(path, "~/") {
+		usr, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(usr.HomeDir, strings.TrimPrefix(path, "~/"))
+	}
+	return filepath.Abs(path)
 }

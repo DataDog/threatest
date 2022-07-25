@@ -3,6 +3,9 @@
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOT_DIR := $(dir $(MAKEFILE_PATH))
 
+test:
+	go test $(shell go list ./... | grep -v examples)
+
 thirdparty-licenses:
 	go get github.com/google/go-licenses
 	go install github.com/google/go-licenses

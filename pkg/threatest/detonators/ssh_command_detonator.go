@@ -76,7 +76,7 @@ func (m *SSHCommandExecutor) init() error {
 		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }),
 		Timeout:         10 * time.Second,
 	}
-	
+
 	fmt.Println("Connecting over SSH")
 	sshAddress := net.JoinHostPort(realHostname, strconv.Itoa(sshPort))
 	conn, err := ssh.Dial("tcp", sshAddress, config)
@@ -93,10 +93,10 @@ func (m *SSHCommandExecutor) init() error {
 func (m *SSHCommandExecutor) RunCommand(command string) (string, error) {
 
 	session, err := m.SSHConnection.NewSession()
-	defer session.Close()
 	if err != nil {
 		return "", err
 	}
+	defer session.Close()
 
 	modes := ssh.TerminalModes{
 		ssh.ECHO:          0,     // disable echoing

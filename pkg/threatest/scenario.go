@@ -1,14 +1,14 @@
 package threatest
 
 import (
-	. "github.com/datadog/threatest/pkg/threatest/detonators"
+	"github.com/datadog/threatest/pkg/threatest/detonators"
 	"github.com/datadog/threatest/pkg/threatest/matchers"
 	"time"
 )
 
 type Scenario struct {
 	Name       string
-	Detonator  Detonator
+	Detonator  detonators.Detonator
 	Timeout    time.Duration
 	Assertions []matchers.AlertGeneratedMatcher
 }
@@ -17,7 +17,7 @@ type ScenarioBuilder struct {
 	Scenario
 }
 
-func (m *ScenarioBuilder) WhenDetonating(detonation Detonator) *ScenarioBuilder {
+func (m *ScenarioBuilder) WhenDetonating(detonation detonators.Detonator) *ScenarioBuilder {
 	m.Detonator = detonation
 	return m
 }

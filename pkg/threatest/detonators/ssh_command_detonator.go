@@ -76,9 +76,9 @@ func (m *SSHCommandExecutor) init() error {
 		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }),
 		Timeout:         10 * time.Second,
 	}
-
+	
 	fmt.Println("Connecting over SSH")
-	sshAddress := fmt.Sprintf("%s:%d", realHostname, sshPort)
+	sshAddress := net.JoinHostPort(realHostname, strconv.Itoa(sshPort))
 	conn, err := ssh.Dial("tcp", sshAddress, config)
 	if err != nil {
 		return fmt.Errorf("unable to establish SSH connection to %s: %v", sshAddress, err)

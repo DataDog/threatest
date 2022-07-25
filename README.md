@@ -1,5 +1,7 @@
 # Threatest
 
+![static analysis](https://github.com/DataDog/threatest/actions/workflows/static-analysis.yml/badge.svg)
+
 Threatest is a Go framework for testing threat detection end-to-end.
 
 Threatest allows you to **detonate** an attack technique, and verify that the alert you expect was generated in your favorite security platform.

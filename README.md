@@ -1,5 +1,6 @@
 # Threatest
 
+![unit tests](https://github.com/DataDog/threatest/actions/workflows/test.yml/badge.svg)
 ![static analysis](https://github.com/DataDog/threatest/actions/workflows/static-analysis.yml/badge.svg)
 
 Threatest is a Go framework for testing threat detection end-to-end.

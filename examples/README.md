@@ -7,7 +7,7 @@
 Sample usage:
 
 ```
-go test cloudsiem_alerts_test.go -v
+go test -timeout 99999s cloudsiem_alerts_test.go -v
 ```
 
 Sample output:

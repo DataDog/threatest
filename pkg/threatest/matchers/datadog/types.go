@@ -22,6 +22,13 @@ type DatadogAlertGeneratedAssertionBuilder struct {
 	DatadogAlertGeneratedAssertion
 }
 
+func GetDDSite() string {
+	if ddSite, isSet := os.LookupEnv("DD_SITE"); isSet {
+		return ddSite
+	}
+	return "datadoghq.com"
+}
+
 func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
 	builder := &DatadogAlertGeneratedAssertionBuilder{}
 	ddApiKey := os.Getenv("DD_API_KEY")
@@ -29,6 +36,9 @@ func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
 	ctx := context.WithValue(context.Background(), datadog.ContextAPIKeys, map[string]datadog.APIKey{
 		"apiKeyAuth": {Key: ddApiKey},
 		"appKeyAuth": {Key: ddAppKey},
+	})
+	ctx = context.WithValue(ctx, datadog.ContextServerVariables, map[string]string{
+		"site": GetDDSite(),
 	})
 	cfg := datadog.NewConfiguration()
 	cfg.SetUnstableOperationEnabled("SearchSecurityMonitoringSignals", true)

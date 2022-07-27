@@ -1,6 +1,7 @@
 package threatest
 
 import (
+	"errors"
 	detonatorMocks "github.com/datadog/threatest/pkg/threatest/detonators/mocks"
 	"github.com/datadog/threatest/pkg/threatest/matchers"
 	matcherMocks "github.com/datadog/threatest/pkg/threatest/matchers/mocks"
@@ -75,4 +76,48 @@ func TestRunnerWorks(t *testing.T) {
 		})
 	}
 
+}
+
+func TestRunnerErrorHandling(t *testing.T) {
+
+	mockDetonator := &detonatorMocks.Detonator{}
+	mockDetonator.On("Detonate").Return("my-uid", nil)
+
+	mockFailingDetonator := &detonatorMocks.Detonator{}
+	mockFailingDetonator.On("Detonate").Return("", errors.New("foo"))
+
+	mockMatcher := &matcherMocks.AlertGeneratedMatcher{}
+	mockMatcher.On("String").Return("sample")
+	mockMatcher.On("Cleanup", "my-uid").Return(nil)
+	mockMatcher.On("HasExpectedAlert", "my-uid").Return(true, nil)
+
+	runner := TestRunner{
+		Scenarios: []*Scenario{
+			{
+				Name:       "test-scenario1",
+				Detonator:  mockDetonator,
+				Assertions: []matchers.AlertGeneratedMatcher{mockMatcher},
+				Timeout:    5 * time.Second,
+			},
+			{
+				Name:       "test-scenario2-error",
+				Detonator:  mockFailingDetonator,
+				Assertions: []matchers.AlertGeneratedMatcher{mockMatcher},
+				Timeout:    5 * time.Second,
+			},
+			{
+				Name:       "test-scenario3",
+				Detonator:  mockDetonator,
+				Assertions: []matchers.AlertGeneratedMatcher{mockMatcher},
+				Timeout:    5 * time.Second,
+			},
+		},
+		Interval: 0,
+	}
+	err := runner.Run()
+	assert.Error(t, err, "the runner should return an error when a scenario returns an error")
+
+	// All scenarios should have been detonated, even if one returned an error
+	mockDetonator.AssertNumberOfCalls(t, "Detonate", 2)
+	mockFailingDetonator.AssertNumberOfCalls(t, "Detonate", 1)
 }

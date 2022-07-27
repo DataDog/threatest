@@ -6,6 +6,7 @@ import (
 	"github.com/datadog/threatest/pkg/threatest/matchers"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -35,12 +36,26 @@ func (m *TestRunner) Run() error {
 	m.buildScenarios()
 
 	// Run every scenario one by one
+	failedScenarios := map[string]error{}
 	for i := range m.Scenarios {
 		scenario := m.Scenarios[i]
 		if err := m.runScenario(scenario); err != nil {
-			return err
+			failedScenarios[scenario.Name] = err
 		}
 	}
+
+	if len(failedScenarios) > 0 {
+		var errorMessage strings.Builder
+		errorMessage.WriteString("At least one scenario failed to be detonated:\n\n")
+		for scenario, err := range failedScenarios {
+			errorMessage.WriteString(scenario)
+			errorMessage.WriteString(" returned: ")
+			errorMessage.WriteString(err.Error())
+			errorMessage.WriteRune('\n')
+		}
+		return errors.New(errorMessage.String())
+	}
+
 	return nil
 }
 

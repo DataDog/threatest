@@ -53,9 +53,11 @@ func (m *DatadogSecuritySignalsAPIImpl) CloseSignal(id string) error {
 		"archiveReason":  "testing_or_maintenance",
 		"archiveComment": "End to end detection testing",
 	})
+	path := fmt.Sprintf("api/v1/security_analytics/signals/%s/state", id)
+	ddSite := (m.ctx.Value(datadog.ContextServerVariables).(map[string]string))["site"]
 	req, err := http.NewRequest(
 		http.MethodPatch,
-		"https://api.datadoghq.com"+fmt.Sprintf("/api/v1/security_analytics/signals/%s/state", id),
+		fmt.Sprintf("https://api.%s/%s", ddSite, path),
 		bytes.NewBuffer(payload),
 	)
 

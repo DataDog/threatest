@@ -29,7 +29,7 @@ Supported alert matchers:
 
 Each detonation is assigned a UUID. This UUID is reflected in the detonation and used to ensure that the matched alert corresponds exactly to this detonation.
 
-The way this is done depends on the detonator; for instance, Stratus Red Team injects and the AWS Detonator inject it in the user-agent; the SSH detonator uses a parent process containing the UUID.
+The way this is done depends on the detonator; for instance, Stratus Red Team and the AWS Detonator inject it in the user-agent; the SSH detonator uses a parent process containing the UUID.
 
 ## Sample usage
 

@@ -38,23 +38,26 @@ See [examples](./examples) for complete usage example.
 ### Testing Datadog Cloud SIEM signals triggered by Stratus Red Team
 
 ```go
-runner := &TestRunner{}
+threatest := Threatest()
 
-runner.Scenario("AWS console login").
+threatest.Scenario("AWS console login").
   WhenDetonating(StratusRedTeamTechnique("aws.initial-access.console-login-without-mfa")).
   Expect(DatadogSecuritySignal("AWS Console login without MFA").WithSeverity("medium")).
-  Expect(DatadogSecuritySignal("An IAM user was created")).
-  WithTimeout(10 * time.Minute)
+  WithTimeout(15 * time.Minute)
+
+assert.NoError(t, threatest.Run())
 ```
 
-### Testing Datadog CWS signals triggered by running commands over SSH
+### Testing Datadog Cloud Workload Security signals triggered by running commands over SSH
 
 ```go
 ssh, _ := NewSSHCommandExecutor("test-box", "", "")
 
-runner := &TestRunner{}
+threatest := Threatest()
 
-runner.Scenario("curl to metadata service").
-  WhenDetonating(NewCommandDetonator(ssh, "curl http://169.254.169.254 --connect-timeout 5")).
+threatest.Scenario("curl to metadata service").
+  WhenDetonating(NewCommandDetonator(ssh, "curl http://169.254.169.254 --connect-timeout 1")).
   Expect(DatadogSecuritySignal("EC2 Instance Metadata Service Accessed via Network Utility"))
+
+assert.NoError(t, threatest.Run())
 ```

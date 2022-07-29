@@ -46,7 +46,7 @@ func (m *TestRunner) Run() error {
 
 	if len(failedScenarios) > 0 {
 		var errorMessage strings.Builder
-		errorMessage.WriteString("At least one scenario failed to be detonated:\n\n")
+		errorMessage.WriteString("At least one scenario failed:\n\n")
 		for scenario, err := range failedScenarios {
 			errorMessage.WriteString(scenario)
 			errorMessage.WriteString(" returned: ")

@@ -70,3 +70,7 @@ Connection succeeded
     --- PASS: TestCWSAlertsV2/curl_to_metadata_service (20.24s)
 PASS
 ```
+
+## Using the custom AWS detonator and Terratest to prepare infrastructure
+
+See [custom-aws-detonator-terratest](./custom-aws-detonator-terratest).

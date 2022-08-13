@@ -6,6 +6,9 @@
 Threatest is a Go framework for testing threat detection end-to-end.
 
 Threatest allows you to **detonate** an attack technique, and verify that the alert you expect was generated in your favorite security platform.
+
+Read the announcement blog post: https://securitylabs.datadoghq.com/articles/threatest-end-to-end-testing-threat-detection/
+
 ## Concepts
 
 ### Detonators

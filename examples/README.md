@@ -74,3 +74,19 @@ PASS
 ## Using the custom AWS detonator and Terratest to prepare infrastructure
 
 See [custom-aws-detonator-terratest](./custom-aws-detonator-terratest).
+
+## Using the local detonator
+
+Setup: Export DD API key and App key as environment variables
+```
+export DD_API_KEY=<API_KEY>
+export DD_APP_KEY=<APP_KEY>
+```
+
+Sample usage:
+```
+go test local_detonator_test.go -v
+```
+
+Sample output:
+

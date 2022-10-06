@@ -89,4 +89,28 @@ go test local_detonator_test.go -v
 ```
 
 Sample output:
+```
+=== RUN   TestLocalDetonator
+Executing curl http://169.254.169.254 --connect-timeout 5
+Executing cp /bin/bash /tmp/java; /tmp/java -c "curl 1.1.1.1"
+Test failed: At least one scenario failed:
 
+curl to metadata service returned: curl to metadata service: 1 assertions did not pass
+ => Did not find Datadog security signal 'Network utility executed'
+Java spawning shell returned: Java spawning shell: 1 assertions did not pass
+ => Did not find Datadog security signal 'Java process spawned shell'
+
+--- FAIL: TestLocalDetonator (361.94s)
+FAIL
+FAIL	command-line-arguments	361.954s
+FAIL
+```
+
+```
+=== RUN   TestLocalDetonator
+Executing curl http://169.254.169.254 --connect-timeout 5
+Executing cp /bin/bash /tmp/java; /tmp/java -c "curl 1.1.1.1"
+--- PASS: TestLocalDetonator (38.10s)
+PASS
+ok  	command-line-arguments	38.121s
+```

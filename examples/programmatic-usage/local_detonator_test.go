@@ -1,4 +1,4 @@
-package examples
+package programmatic_usage
 
 import (
 	"fmt"

@@ -34,11 +34,95 @@ Each detonation is assigned a UUID. This UUID is reflected in the detonation and
 
 The way this is done depends on the detonator; for instance, Stratus Red Team and the AWS Detonator inject it in the user-agent; the SSH detonator uses a parent process containing the UUID.
 
-## Sample usage
+## Usage
 
-See [examples](./examples) for complete usage example.
+### Through the CLI
 
-### Testing Datadog Cloud SIEM signals triggered by Stratus Red Team
+Threatest comes with a CLI that you can use to run test scenarios described as YAML, following a specific [schema](./schemas/threatest.schema.json). You can configure this schema in your editor to benefit from in-IDE linting and autocompletion (see [documentation for VSCode](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml#associating-a-schema-to-a-glob-pattern-via-yaml.schemas) using the [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) extension).
+
+Sample usage:
+
+```bash
+$ threatest lint scenarios.threatest.yaml
+All 6 scenarios are syntaxically valid
+
+# Local detonation
+$ threatest run local-scenarios.threatest.yaml
+
+# Remote detonation over SSH
+$ threatest run scenarios.threatest.yaml --ssh-host test-box --ssh-username vagrant
+
+# Alternatively, specify SSH parameters from environment variables
+$ export THREATEST_SSH_HOST=test-box
+$ export THREATEST_SSH_USERNAME=vagrant
+$ threatest run scenarios.threatest.yaml
+```
+
+Sample scenario definition file:
+
+```yaml
+scenarios:
+  - description: curl metadata service
+    detonate:
+      remoteDetonator:
+        commands: ["curl http://169.254.169.254 --connect-timeout 1"]
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal:
+          name: "Network utility accessed cloud metadata service"
+          severity: medium
+
+  - description: running nmap
+    detonate:
+      remoteDetonator:
+        commands:
+          - "which nmap || sudo apt install -y nmap"
+          - "nmap -sn 172.16.2.1/32 -T5"
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal:
+          name: Network scanning utility executed
+```
+
+
+You can output the test results to a JSON file:
+
+```
+$ threatest run scenarios.threatest.yaml --output test-results.json
+$ cat test-results.json
+[
+  {
+    "description": "change user password",
+    "isSuccess": true,
+    "errorMessage": "",
+    "durationSeconds": 22.046627348,
+    "timeDetonated": "2022-11-15T22:26:14.182844+01:00"
+  },
+  {
+    "description": "adding an SSH key",
+    "isSuccess": true,
+    "errorMessage": "",
+    "durationSeconds": 23.604699625,
+    "timeDetonated": "2022-11-15T22:26:14.182832+01:00"
+  },
+  {
+    "description": "change user password",
+    "isSuccess": false,
+    "errorMessage": "At least one scenario failed:\n\nchange user password returned: change user password: 1 assertions did not pass\n =\u003e Did not find Datadog security signal 'bar'\n",
+    "durationSeconds": 3.505294235,
+    "timeDetonated": "2022-11-15T22:26:36.229349+01:00"
+  }
+]
+```
+
+By default, scenarios are run with a maximum parallelism of 5. You can increase this setting using the `--parallelism` argument.
+Note that when using remote SSH detonators, each scenario running establishes a new SSH connection.
+
+### Using Threatest programmatically
+
+See [examples](./examples) for complete programmatic usage example.
+
+#### Testing Datadog Cloud SIEM signals triggered by Stratus Red Team
 
 ```go
 threatest := Threatest()

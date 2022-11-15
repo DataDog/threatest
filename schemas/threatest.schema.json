@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/datadog/threatest/threatest.schema.json",
+  "title": "Threatest Test Suite",
+  "description": "Schema for a Threatest test suite",
+  "type": "object",
+  "required": [
+    "scenarios"
+  ],
+  "properties": {
+    "scenarios": {
+      "description": "The display name of the vulnerability",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "The list of scenarios",
+        "required": [
+          "description",
+          "detonate",
+          "expectations"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the scenario"
+          },
+          "detonate": {
+            "type": "object",
+            "description": "How to detonate the attack",
+            "oneOf": [
+              {
+                "required": [
+                  "localDetonator"
+                ]
+              },
+              {
+                "required": [
+                  "remoteDetonator"
+                ]
+              },
+              {
+                "required": [
+                  "stratusRedTeamDetonator"
+                ]
+              }
+            ],
+            "properties": {
+              "localDetonator": {
+                "$ref": "localDetonator.schema.json"
+              },
+              "remoteDetonator": {
+                "$ref": "remoteDetonator.schema.json"
+              },
+              "stratusRedTeamDetonator": {
+                "$ref": "stratusRedTeamDetonator.schema.json"
+              }
+            }
+          },
+          "expectations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Expectations",
+              "oneOf": [
+                {
+                  "required": [
+                    "datadogSecuritySignal"
+                  ]
+                }
+              ],
+              "properties": {
+                "datadogSecuritySignal": {
+                  "$ref": "datadogSecuritySignal.schema.json"
+                },
+                "timeout": {
+                  "type": "string",
+                  "default": "5m",
+                  "description": "The maximal time to wait for the assertion, written as a Go duration (e.g. 5m)"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

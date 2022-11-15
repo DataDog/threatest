@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "description": "Definition of a Stratus Red Team detonator",
+  "properties": {
+    "attackTechnique": {
+      "type": "string",
+      "description": "Attack technique ID of the Stratus Red Team technique to detonate (per https://stratus-red-team.cloud/attack-techniques/list/)"
+    }
+  }
+}

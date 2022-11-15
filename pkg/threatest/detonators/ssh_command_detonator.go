@@ -19,18 +19,15 @@ type SSHCommandExecutor struct {
 	SSHUsername   string
 	SSHKeyFile    string
 	SSHConnection *ssh.Client
+	isInitialized bool
 }
 
 func NewSSHCommandExecutor(hostname string, username string, keyFile string) (*SSHCommandExecutor, error) {
-	executor := &SSHCommandExecutor{
+	return &SSHCommandExecutor{
 		SSHHostname: hostname,
 		SSHUsername: username,
 		SSHKeyFile:  keyFile,
-	}
-	if err := executor.init(); err != nil {
-		return nil, err
-	}
-	return executor, nil
+	}, nil
 }
 
 func (m *SSHCommandExecutor) init() error {
@@ -91,7 +88,12 @@ func (m *SSHCommandExecutor) init() error {
 }
 
 func (m *SSHCommandExecutor) RunCommand(command string) (string, error) {
-
+	if !m.isInitialized {
+		if err := m.init(); err != nil {
+			return "", err
+		}
+		m.isInitialized = true
+	}
 	session, err := m.SSHConnection.NewSession()
 	if err != nil {
 		return "", err

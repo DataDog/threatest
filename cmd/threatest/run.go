@@ -148,12 +148,16 @@ func (m *RunCommand) Validate() error {
 // every time a test completes, the callback function is invoked
 func (m *RunCommand) runScenariosParallel(allScenarios []*threatest.Scenario, callback func(result *ScenarioRunResult)) []ScenarioRunResult {
 	numWorkers := m.Parallelism
+	// No point in having more workers than scenarios to run
 	if numScenarios := len(allScenarios); numScenarios < numWorkers {
 		numWorkers = numScenarios
 	}
 
 	log.Infof("Running %d scenarios with a parallelism of %d", len(allScenarios), numWorkers)
+
+	// Channel to hold "tasks" (scenarios to run)
 	scenarioChan := make(chan *threatest.Scenario, numWorkers)
+	// Channel to hold test results
 	resultsChan := make(chan *ScenarioRunResult)
 
 	// Create 1 worker by desired parallelism unit

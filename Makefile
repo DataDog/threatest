@@ -6,8 +6,8 @@ ROOT_DIR := $(dir $(MAKEFILE_PATH))
 all: build
 
 build:
-	mkdir -p bin
-	go build -o bin/threatest cmd/threatest/*.go
+	mkdir -p dist
+	go build -o dist/threatest cmd/threatest/*.go
 
 test:
 	go test $(shell go list ./... | grep -v examples)

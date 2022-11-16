@@ -8,6 +8,6 @@ RUN make BUILD_VERSION=${VERSION}
 
 FROM alpine:3.16@sha256:3d426b0bfc361d6e8303f51459f17782b219dece42a1c7fe463b6014b189c86d AS runner
 LABEL org.opencontainers.image.source="https://github.com/DataDog/threatest/"
-COPY --from=builder /build/bin/threatest /threatest
+COPY --from=builder /build/dist/threatest /threatest
 ENTRYPOINT ["/threatest"]
 CMD ["--help"]

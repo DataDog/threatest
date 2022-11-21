@@ -3,7 +3,7 @@
 ![unit tests](https://github.com/DataDog/threatest/actions/workflows/test.yml/badge.svg)
 ![static analysis](https://github.com/DataDog/threatest/actions/workflows/static-analysis.yml/badge.svg)
 
-Threatest is a Go framework for testing threat detection end-to-end.
+Threatest is a CLI and Go framework for testing threat detection end-to-end.
 
 Threatest allows you to **detonate** an attack technique, and verify that the alert you expect was generated in your favorite security platform.
 
@@ -39,6 +39,13 @@ The way this is done depends on the detonator; for instance, Stratus Red Team an
 ### Through the CLI
 
 Threatest comes with a CLI that you can use to run test scenarios described as YAML, following a specific [schema](./schemas/threatest.schema.json). You can configure this schema in your editor to benefit from in-IDE linting and autocompletion (see [documentation for VSCode](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml#associating-a-schema-to-a-glob-pattern-via-yaml.schemas) using the [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) extension).
+
+Install the CLI by downloading a [binary release](https://github.com/DataDog/threatest/releases) or with Homebrew:
+
+```
+brew tap datadog/threatest https://github.com/datadog/threatest
+brew install datadog/threatest/threatest
+```
 
 Sample usage:
 

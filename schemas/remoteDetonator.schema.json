@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "description": "Definition of a remote command detonation",
+  "properties": {
+    "commands": {
+      "type": "array",
+      "items": {"type":  "string"}
+    }
+  }
+}

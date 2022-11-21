@@ -1,4 +1,4 @@
-package examples
+package programmatic_usage
 
 import (
 	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/loader" // Note: This import is needed
@@ -33,8 +33,8 @@ func TestCWSAlerts(t *testing.T) {
 //*/
 
 /*
-	This function shows a way of writing data-driven Go tests, which has the nice property of parallelization
-	and showing errors per test case. It should be a little less easy to write, but faster
+This function shows a way of writing data-driven Go tests, which has the nice property of parallelization
+and showing errors per test case. It should be a little less easy to write, but faster
 */
 func TestCWSAlertsV2(t *testing.T) {
 	testCases := []struct {

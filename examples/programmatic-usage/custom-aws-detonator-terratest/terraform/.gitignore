@@ -1,2 +1,2 @@
-.terraform*
+.terraform
 terraform.tfstate*

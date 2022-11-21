@@ -1,8 +1,8 @@
-# Example
+# Sample programmatic usage
 
 ## Testing Cloud SIEM rules
 
-[`cloudsiem_alerts_test.go`](./cloudsiem_alerts_test.go) uses Stratus Red Team (through its programmatic interface) to detonate AWS attack ttechniques, then polls the Datadog API to verify that an expected Cloud SIEM signal was created.
+[`cloudsiem_alerts_test.go`](cloudsiem_alerts_test.go) uses Stratus Red Team (through its programmatic interface) to detonate AWS attack ttechniques, then polls the Datadog API to verify that an expected Cloud SIEM signal was created.
 
 Sample usage:
 
@@ -28,7 +28,7 @@ PASS
 
 ## Testing CWS rules
 
-[`cws_alerts_tests.go`](./cws_alerts_test.go) assumes you have a machine `test-box` configured in your OpenSSH configuration, and running CWS (for instance using [datadog-security-monitoring-strater](https://github.com/DataDog/datadog-security-monitoring-starter/tree/main/1.virtual-machine)).
+[`cws_alerts_tests.go`](cws_alerts_test.go) assumes you have a machine `test-box` configured in your OpenSSH configuration, and running CWS (for instance using [datadog-security-monitoring-strater](https://github.com/DataDog/datadog-security-monitoring-starter/tree/main/1.virtual-machine)).
 
 It will detonate several commands through SSH on the machine, and poll the Datadog API to verify that the expected CWS signals were generated.
 
@@ -73,7 +73,7 @@ PASS
 
 ## Using the custom AWS detonator and Terratest to prepare infrastructure
 
-See [custom-aws-detonator-terratest](./custom-aws-detonator-terratest).
+See [custom-aws-detonator-terratest](custom-aws-detonator-terratest).
 
 ## Using the local detonator
 

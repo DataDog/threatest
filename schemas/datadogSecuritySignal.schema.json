@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "description": "Matcher for a Datadog security signal",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the Datadog signal to match on (exact match)"
+    },
+    "severity": {
+      "type": "string",
+      "description": "Severity of the Datadog signal to match on"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 FROM golang:1.19-alpine3.16@sha256:4e2a54594cfe7002a98c483c28f6f3a78e5c7f4010c355a8cf960292a3fdecfe AS builder
 ARG VERSION=dev-snapshot
 RUN mkdir /build
-RUN apk add --update make
+RUN apk add --update make gcc musl-dev
 WORKDIR /build
 COPY . /build
 RUN make BUILD_VERSION=${VERSION}

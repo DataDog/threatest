@@ -69,18 +69,21 @@ func NewRunCommand() *cobra.Command {
 	runCmd.Flags().StringVarP(&sshUsername, "ssh-username", "", os.Getenv("THREATEST_SSH_USERNAME"), "SSH username to use for remote command detonation  (leave empty to use system configuration). Can also be specified through THREATEST_SSH_USERNAME")
 	runCmd.Flags().StringVarP(&sshKey, "ssh-key", "", os.Getenv("THREATEST_SSH_KEY"), "SSH keypair to use for remote command detonation (leave empty to use system configuration). Can also be specified through THREATEST_SSH_KEY. Only unencrypted keys are currently supported")
 	runCmd.Flags().StringVarP(&jsonOutputFile, "output", "o", "", "Write JSON test results to the specified file")
+	runCmd.Flags().IntVarP(&parallelism, "max-parallelism", "", getDefaultParallelism(), "Maximal parallelism to run the scenarios with. Can also be set through THREATEST_MAX_PARALLELISM")
 
-	var defaultParallelism = 5
+	return runCmd
+}
+
+func getDefaultParallelism() int {
+	const DefaultParallelism = 5
 	if parallelism, isSet := os.LookupEnv("THREATEST_MAX_PARALLELISM"); isSet {
 		parsedParallelism, err := strconv.Atoi(parallelism)
 		if err != nil {
 			log.Fatalf("unable to convert max parallelism '%s' to integer: %v", parallelism, err)
 		}
-		defaultParallelism = parsedParallelism
+		return parsedParallelism
 	}
-	runCmd.Flags().IntVarP(&parallelism, "max-parallelism", "", defaultParallelism, "Maximal parallelism to run the scenarios with. Can also be set through THREATEST_MAX_PARALLELISM")
-
-	return runCmd
+	return DefaultParallelism
 }
 
 func (m *RunCommand) Do() error {

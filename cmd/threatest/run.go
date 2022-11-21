@@ -213,7 +213,7 @@ func (m *RunCommand) runSingleScenario(scenarios <-chan *threatest.Scenario, res
 func (m *RunCommand) writeJsonOutput(results []ScenarioRunResult) error {
 	outputBytes, err := json.MarshalIndent(results, "", "  ")
 	if err != nil {
-		return fmt.Errorf("unable to convert scenario test results to JSON: %v", err)
+		return fmt.Errorf("unable to convert scenario test results to JSON: %w", err)
 	}
 
 	if err := os.WriteFile(m.JsonOutputFile, outputBytes, 0600); err != nil {

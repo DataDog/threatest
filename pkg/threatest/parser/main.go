@@ -34,10 +34,10 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 
 	for _, parsedScenario := range parsed.Scenarios {
 		scenario := threatest.Scenario{}
-		scenario.Name = parsedScenario.Description
+		scenario.Name = parsedScenario.Name
 
-		if parsedScenario.Detonate == nil {
-			return nil, fmt.Errorf("scenario '%s' has no detonation defined", parsedScenario.Description)
+		if !hasDetonation(parsedScenario) {
+			return nil, fmt.Errorf("scenario '%s' has no detonation defined", parsedScenario.Name)
 		}
 
 		// Detonation
@@ -59,7 +59,7 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 
 		// Assertions
 		if len(parsedScenario.Expectations) == 0 {
-			return nil, fmt.Errorf("scenario '%s' has no assertions defined", parsedScenario.Description)
+			return nil, fmt.Errorf("scenario '%s' has no assertions defined", parsedScenario.Name)
 		}
 		for _, parsedAssertion := range parsedScenario.Expectations {
 			if datadogMatcher := parsedAssertion.DatadogSecuritySignal; datadogMatcher != nil {
@@ -76,11 +76,17 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 		rawTimeout := parsedScenario.Expectations[0].Timeout
 		parsedDuration, err := time.ParseDuration(rawTimeout)
 		if err != nil {
-			return nil, fmt.Errorf("scenario '%s' has an invalid timeout '%s': '%v'", parsedScenario.Description, rawTimeout, err)
+			return nil, fmt.Errorf("scenario '%s' has an invalid timeout '%s': '%v'", parsedScenario.Name, rawTimeout, err)
 		}
 		scenario.Timeout = parsedDuration
 
 		scenarios = append(scenarios, &scenario)
 	}
 	return scenarios, nil
+}
+
+// hasDetonation returns true if the scenario has at least 1 detonation defined
+func hasDetonation(scenario ThreatestSchemaJsonScenariosElem) bool {
+	detonations := scenario.Detonate
+	return detonations.LocalDetonator != nil || detonations.RemoteDetonator != nil || detonations.StratusRedTeamDetonator != nil
 }

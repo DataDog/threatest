@@ -15,12 +15,12 @@
         "type": "object",
         "description": "The list of scenarios",
         "required": [
-          "description",
+          "name",
           "detonate",
           "expectations"
         ],
         "properties": {
-          "description": {
+          "name": {
             "type": "string",
             "description": "Description of the scenario"
           },

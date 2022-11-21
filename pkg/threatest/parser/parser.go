@@ -5,6 +5,7 @@ package parser
 import "fmt"
 import "encoding/json"
 
+// Matcher for a Datadog security signal
 type DatadogSecuritySignalSchemaJson struct {
 	// Name of the Datadog signal to match on (exact match)
 	Name string `json:"name"`
@@ -13,18 +14,22 @@ type DatadogSecuritySignalSchemaJson struct {
 	Severity *string `json:"severity,omitempty"`
 }
 
+// Definition of a local command detonation
 type LocalDetonatorSchemaJson struct {
 	// Commands corresponds to the JSON schema field "commands".
 	Commands []string `json:"commands,omitempty"`
 }
 
+// Definition of a remote command detonation
 type RemoteDetonatorSchemaJson struct {
 	// Commands corresponds to the JSON schema field "commands".
 	Commands []string `json:"commands,omitempty"`
 }
 
+// Definition of a Stratus Red Team detonator
 type StratusRedTeamDetonatorSchemaJson struct {
-	// Attack technique ID of the Stratus Red Team technique to detonate
+	// Attack technique ID of the Stratus Red Team technique to detonate (per
+	// https://stratus-red-team.cloud/attack-techniques/list/)
 	AttackTechnique *string `json:"attackTechnique,omitempty"`
 }
 
@@ -89,14 +94,14 @@ func (j *ThreatestSchemaJsonScenariosElemExpectationsElem) UnmarshalJSON(b []byt
 
 // The list of scenarios
 type ThreatestSchemaJsonScenariosElem struct {
-	// Description of the scenario
-	Description string `json:"description"`
-
 	// How to detonate the attack
-	Detonate *ThreatestSchemaJsonScenariosElemDetonate `json:"detonate,omitempty"`
+	Detonate ThreatestSchemaJsonScenariosElemDetonate `json:"detonate"`
 
 	// Expectations corresponds to the JSON schema field "expectations".
-	Expectations []ThreatestSchemaJsonScenariosElemExpectationsElem `json:"expectations,omitempty"`
+	Expectations []ThreatestSchemaJsonScenariosElemExpectationsElem `json:"expectations"`
+
+	// Description of the scenario
+	Name string `json:"name"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -105,8 +110,14 @@ func (j *ThreatestSchemaJsonScenariosElem) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
 	}
-	if v, ok := raw["description"]; !ok || v == nil {
-		return fmt.Errorf("field description: required")
+	if v, ok := raw["detonate"]; !ok || v == nil {
+		return fmt.Errorf("field detonate: required")
+	}
+	if v, ok := raw["expectations"]; !ok || v == nil {
+		return fmt.Errorf("field expectations: required")
+	}
+	if v, ok := raw["name"]; !ok || v == nil {
+		return fmt.Errorf("field name: required")
 	}
 	type Plain ThreatestSchemaJsonScenariosElem
 	var plain Plain

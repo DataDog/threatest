@@ -1,7 +1,7 @@
 scenarios:
   # Example 1: Remote detonation over SSH
   # Note: SSH configuration is provided using the --ssh-host, --ssh-username and --ssh-keyfile CLI arguments
-  - description: curl metadata service
+  - name: curl metadata service
     detonate:
       remoteDetonator:
         commands: ["curl http://169.254.169.254 --connect-timeout 1"]
@@ -14,7 +14,7 @@ scenarios:
   # Example 2: Stratus Red Team detonation
   # Note: You must be authenticated to the relevant cloud provider before running it
   # The example below is equivalent to manually running "stratus detonate aws.exfiltration.ec2-security-group-open-port-22-ingress"
-  - description: opening a security group to the Internet
+  - name: opening a security group to the Internet
     detonate:
       stratusRedTeamDetonator:
         attackTechnique: aws.exfiltration.ec2-security-group-open-port-22-ingress

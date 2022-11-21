@@ -26,3 +26,5 @@ Sample scenario test output file:
   }
 ]
 ```
+
+You can use Threatest's JSONSchema in your editor to benefit from in-IDE linting and autocompletion (see [documentation for VSCode](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml#associating-a-schema-to-a-glob-pattern-via-yaml.schemas) using the [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) extension).

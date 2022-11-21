@@ -3,7 +3,7 @@ ARG VERSION=dev-snapshot
 RUN mkdir /build
 RUN apk add --update make
 WORKDIR /build
-ADD . /build
+COPY . /build
 RUN make BUILD_VERSION=${VERSION}
 
 FROM alpine:3.16@sha256:3d426b0bfc361d6e8303f51459f17782b219dece42a1c7fe463b6014b189c86d AS runner

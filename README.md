@@ -69,7 +69,7 @@ Sample scenario definition file:
 
 ```yaml
 scenarios:
-  - description: curl metadata service
+  - name: curl metadata service
     detonate:
       remoteDetonator:
         commands: ["curl http://169.254.169.254 --connect-timeout 1"]
@@ -79,7 +79,7 @@ scenarios:
           name: "Network utility accessed cloud metadata service"
           severity: medium
 
-  - description: running nmap
+  - name: running nmap
     detonate:
       remoteDetonator:
         commands:

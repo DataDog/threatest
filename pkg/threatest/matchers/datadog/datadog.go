@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
-	"github.com/aws/smithy-go/ptr"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+	"github.com/aws/smithy-go/ptr"
 )
 
 const QueryAllOpenSignals = `@workflow.triage.state:open`
@@ -19,7 +20,7 @@ const QueryOpenSignalsByAlertNameAndSeverity = `@workflow.triage.state:open @wor
 const QuerySeverity = `status:%s`
 
 type DatadogSecuritySignalsAPI interface {
-	SearchSignals(query string) ([]datadog.SecurityMonitoringSignal, error)
+	SearchSignals(query string) (<-chan datadog.SecurityMonitoringSignal, error)
 	CloseSignal(id string) error
 }
 
@@ -28,23 +29,24 @@ type DatadogSecuritySignalsAPIImpl struct {
 	ctx       context.Context
 }
 
-func (m *DatadogSecuritySignalsAPIImpl) SearchSignals(query string) ([]datadog.SecurityMonitoringSignal, error) {
-	maxSignals := 1000
+func (m *DatadogSecuritySignalsAPIImpl) SearchSignals(query string) (<-chan datadog.SecurityMonitoringSignal, error) {
+	maxSignalsPerPage := 1000
 	params := datadog.NewSearchSecurityMonitoringSignalsOptionalParameters().WithBody(datadog.SecurityMonitoringSignalListRequest{
 		Filter: &datadog.SecurityMonitoringSignalListRequestFilter{
 			From:  datadog.PtrTime(time.Now().Add(-1 * time.Hour)), // Signals no older than 1 hour
 			Query: datadog.PtrString(query),
 		},
-		Page: &datadog.SecurityMonitoringSignalListRequestPage{Limit: ptr.Int32(int32(maxSignals))},
+		Page: &datadog.SecurityMonitoringSignalListRequestPage{Limit: ptr.Int32(int32(maxSignalsPerPage))},
 		Sort: datadog.SECURITYMONITORINGSIGNALSSORT_TIMESTAMP_DESCENDING.Ptr(),
 	})
 
-	signals, _, err := m.apiClient.SecurityMonitoringApi.SearchSecurityMonitoringSignals(m.ctx, *params)
+	signals, _, err := m.apiClient.SecurityMonitoringApi.SearchSecurityMonitoringSignalsWithPagination(m.ctx, *params)
 
-	if len(signals.Data) >= maxSignals {
-		return nil, errors.New("unsupported: more than 1000 open signals") // todo: paginate response
+	if err != nil {
+		return nil, errors.New("unable to search signals: " + err.Error())
 	}
-	return signals.Data, err
+
+	return signals, err
 }
 
 func (m *DatadogSecuritySignalsAPIImpl) CloseSignal(id string) error {
@@ -96,12 +98,8 @@ func (m *DatadogAlertGeneratedAssertion) HasExpectedAlert(detonationUuid string)
 		return false, errors.New("unable to search for Datadog security signal: " + err.Error())
 	}
 
-	if len(signals) == 0 {
-		return false, nil
-	}
-
-	for i := range signals {
-		if m.signalMatchesExecution(signals[i], detonationUuid) { //TODO low-prio unify naming of "uuid"/"uid"
+	for signal := range signals {
+		if m.signalMatchesExecution(signal, detonationUuid) { //TODO low-prio unify naming of "uuid"/"uid"
 			return true, nil
 		}
 	}
@@ -119,10 +117,10 @@ func (m *DatadogAlertGeneratedAssertion) Cleanup(detonationUuid string) error {
 		return errors.New("unable to search for Datadog security monitoring signals: " + err.Error())
 	}
 
-	for i := range signals {
-		if m.signalMatchesExecution(signals[i], detonationUuid) {
-			if err := m.SignalsAPI.CloseSignal(*signals[i].Id); err != nil {
-				return errors.New("unable to archive signal " + *signals[i].Id + ": " + err.Error())
+	for signal := range signals {
+		if m.signalMatchesExecution(signal, detonationUuid) {
+			if err := m.SignalsAPI.CloseSignal(*signal.Id); err != nil {
+				return errors.New("unable to archive signal " + *signal.Id + ": " + err.Error())
 			}
 		}
 	}
@@ -130,7 +128,7 @@ func (m *DatadogAlertGeneratedAssertion) Cleanup(detonationUuid string) error {
 	return nil
 }
 
-//TODO: Would probably make more sense to retrieve all open signal and iterate instead of doing 2 pass
+// TODO: Would probably make more sense to retrieve all open signal and iterate instead of doing 2 pass
 func (m *DatadogAlertGeneratedAssertion) buildDatadogSignalQuery() string {
 	severityQuery := ""
 	if m.AlertFilter.Severity != "" {

@@ -2,15 +2,27 @@ package datadog
 
 import (
 	"fmt"
+	"strconv"
+	"testing"
+
 	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
 	"github.com/aws/smithy-go/ptr"
 	"github.com/datadog/threatest/pkg/threatest/matchers/datadog/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"strconv"
-	"testing"
 )
+
+func makeChannel(signals []datadog.SecurityMonitoringSignal) <-chan datadog.SecurityMonitoringSignal {
+	ch := make(chan datadog.SecurityMonitoringSignal)
+	go func() {
+		defer close(ch)
+		for _, item := range signals {
+			ch <- item
+		}
+	}()
+	return ch
+}
 
 // Utility function to returns a sample Datadog signal
 func sampleSignal(id int) *datadog.SecurityMonitoringSignal {
@@ -145,8 +157,8 @@ func TestDatadog(t *testing.T) {
 				fmt.Sprintf(QuerySeverity, alertFilter.Severity)+" ",
 			)
 
-			mockDatadog.On("SearchSignals", QueryAllOpenSignals).Return(allOpenSignals, nil)
-			mockDatadog.On("SearchSignals", expectedQuery).Return(union(signalsMatchingOnlyRuleAndSeverity, signalsMatchingBoth), nil)
+			mockDatadog.On("SearchSignals", QueryAllOpenSignals).Return(makeChannel(allOpenSignals), nil)
+			mockDatadog.On("SearchSignals", expectedQuery).Return(makeChannel(union(signalsMatchingOnlyRuleAndSeverity, signalsMatchingBoth)), nil)
 			mockDatadog.On("CloseSignal", mock.AnythingOfType("string")).Return(nil)
 
 			matcher := DatadogAlertGeneratedAssertion{

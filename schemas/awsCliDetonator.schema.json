@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "description": "Definition of an AWS CLI detonation",
+  "properties": {
+    "script": {
+      "type": "string"
+    }
+  }
+}

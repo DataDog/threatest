@@ -2,49 +2,8 @@
 
 package parser
 
-import "fmt"
 import "encoding/json"
-
-// Matcher for a Datadog security signal
-type DatadogSecuritySignalSchemaJson struct {
-	// Name of the Datadog signal to match on (exact match)
-	Name string `json:"name"`
-
-	// Severity of the Datadog signal to match on
-	Severity *string `json:"severity,omitempty"`
-}
-
-// Definition of a local command detonation
-type LocalDetonatorSchemaJson struct {
-	// Commands corresponds to the JSON schema field "commands".
-	Commands []string `json:"commands,omitempty"`
-}
-
-// Definition of a remote command detonation
-type RemoteDetonatorSchemaJson struct {
-	// Commands corresponds to the JSON schema field "commands".
-	Commands []string `json:"commands,omitempty"`
-}
-
-// Definition of a Stratus Red Team detonator
-type StratusRedTeamDetonatorSchemaJson struct {
-	// Attack technique ID of the Stratus Red Team technique to detonate (per
-	// https://stratus-red-team.cloud/attack-techniques/list/)
-	AttackTechnique *string `json:"attackTechnique,omitempty"`
-}
-
-// How to detonate the attack
-type ThreatestSchemaJsonScenariosElemDetonate struct {
-	// LocalDetonator corresponds to the JSON schema field "localDetonator".
-	LocalDetonator *LocalDetonatorSchemaJson `json:"localDetonator,omitempty"`
-
-	// RemoteDetonator corresponds to the JSON schema field "remoteDetonator".
-	RemoteDetonator *RemoteDetonatorSchemaJson `json:"remoteDetonator,omitempty"`
-
-	// StratusRedTeamDetonator corresponds to the JSON schema field
-	// "stratusRedTeamDetonator".
-	StratusRedTeamDetonator *StratusRedTeamDetonatorSchemaJson `json:"stratusRedTeamDetonator,omitempty"`
-}
+import "fmt"
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (j *DatadogSecuritySignalSchemaJson) UnmarshalJSON(b []byte) error {
@@ -53,7 +12,7 @@ func (j *DatadogSecuritySignalSchemaJson) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	if v, ok := raw["name"]; !ok || v == nil {
-		return fmt.Errorf("field name: required")
+		return fmt.Errorf("field name in DatadogSecuritySignalSchemaJson: required")
 	}
 	type Plain DatadogSecuritySignalSchemaJson
 	var plain Plain
@@ -64,14 +23,64 @@ func (j *DatadogSecuritySignalSchemaJson) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// Definition of an AWS CLI detonation
+type AwsCliDetonatorSchemaJson struct {
+	// Script corresponds to the JSON schema field "script".
+	Script *string `json:"script,omitempty" yaml:"script,omitempty" mapstructure:"script,omitempty"`
+}
+
+// Matcher for a Datadog security signal
+type DatadogSecuritySignalSchemaJson struct {
+	// Name of the Datadog signal to match on (exact match)
+	Name string `json:"name" yaml:"name" mapstructure:"name"`
+
+	// Severity of the Datadog signal to match on
+	Severity *string `json:"severity,omitempty" yaml:"severity,omitempty" mapstructure:"severity,omitempty"`
+}
+
+// Definition of a local command detonation
+type LocalDetonatorSchemaJson struct {
+	// Commands corresponds to the JSON schema field "commands".
+	Commands []string `json:"commands,omitempty" yaml:"commands,omitempty" mapstructure:"commands,omitempty"`
+}
+
+// Definition of a remote command detonation
+type RemoteDetonatorSchemaJson struct {
+	// Commands corresponds to the JSON schema field "commands".
+	Commands []string `json:"commands,omitempty" yaml:"commands,omitempty" mapstructure:"commands,omitempty"`
+}
+
+// Definition of a Stratus Red Team detonator
+type StratusRedTeamDetonatorSchemaJson struct {
+	// Attack technique ID of the Stratus Red Team technique to detonate (per
+	// https://stratus-red-team.cloud/attack-techniques/list/)
+	AttackTechnique *string `json:"attackTechnique,omitempty" yaml:"attackTechnique,omitempty" mapstructure:"attackTechnique,omitempty"`
+}
+
+// How to detonate the attack
+type ThreatestSchemaJsonScenariosElemDetonate struct {
+	// AwsCliDetonator corresponds to the JSON schema field "awsCliDetonator".
+	AwsCliDetonator *AwsCliDetonatorSchemaJson `json:"awsCliDetonator,omitempty" yaml:"awsCliDetonator,omitempty" mapstructure:"awsCliDetonator,omitempty"`
+
+	// LocalDetonator corresponds to the JSON schema field "localDetonator".
+	LocalDetonator *LocalDetonatorSchemaJson `json:"localDetonator,omitempty" yaml:"localDetonator,omitempty" mapstructure:"localDetonator,omitempty"`
+
+	// RemoteDetonator corresponds to the JSON schema field "remoteDetonator".
+	RemoteDetonator *RemoteDetonatorSchemaJson `json:"remoteDetonator,omitempty" yaml:"remoteDetonator,omitempty" mapstructure:"remoteDetonator,omitempty"`
+
+	// StratusRedTeamDetonator corresponds to the JSON schema field
+	// "stratusRedTeamDetonator".
+	StratusRedTeamDetonator *StratusRedTeamDetonatorSchemaJson `json:"stratusRedTeamDetonator,omitempty" yaml:"stratusRedTeamDetonator,omitempty" mapstructure:"stratusRedTeamDetonator,omitempty"`
+}
+
 // Expectations
 type ThreatestSchemaJsonScenariosElemExpectationsElem struct {
 	// DatadogSecuritySignal corresponds to the JSON schema field
 	// "datadogSecuritySignal".
-	DatadogSecuritySignal *DatadogSecuritySignalSchemaJson `json:"datadogSecuritySignal,omitempty"`
+	DatadogSecuritySignal *DatadogSecuritySignalSchemaJson `json:"datadogSecuritySignal,omitempty" yaml:"datadogSecuritySignal,omitempty" mapstructure:"datadogSecuritySignal,omitempty"`
 
 	// The maximal time to wait for the assertion, written as a Go duration (e.g. 5m)
-	Timeout string `json:"timeout,omitempty"`
+	Timeout string `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout,omitempty"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -95,13 +104,13 @@ func (j *ThreatestSchemaJsonScenariosElemExpectationsElem) UnmarshalJSON(b []byt
 // The list of scenarios
 type ThreatestSchemaJsonScenariosElem struct {
 	// How to detonate the attack
-	Detonate ThreatestSchemaJsonScenariosElemDetonate `json:"detonate"`
+	Detonate ThreatestSchemaJsonScenariosElemDetonate `json:"detonate" yaml:"detonate" mapstructure:"detonate"`
 
 	// Expectations corresponds to the JSON schema field "expectations".
-	Expectations []ThreatestSchemaJsonScenariosElemExpectationsElem `json:"expectations"`
+	Expectations []ThreatestSchemaJsonScenariosElemExpectationsElem `json:"expectations" yaml:"expectations" mapstructure:"expectations"`
 
 	// Description of the scenario
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name" mapstructure:"name"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -111,13 +120,13 @@ func (j *ThreatestSchemaJsonScenariosElem) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	if v, ok := raw["detonate"]; !ok || v == nil {
-		return fmt.Errorf("field detonate: required")
+		return fmt.Errorf("field detonate in ThreatestSchemaJsonScenariosElem: required")
 	}
 	if v, ok := raw["expectations"]; !ok || v == nil {
-		return fmt.Errorf("field expectations: required")
+		return fmt.Errorf("field expectations in ThreatestSchemaJsonScenariosElem: required")
 	}
 	if v, ok := raw["name"]; !ok || v == nil {
-		return fmt.Errorf("field name: required")
+		return fmt.Errorf("field name in ThreatestSchemaJsonScenariosElem: required")
 	}
 	type Plain ThreatestSchemaJsonScenariosElem
 	var plain Plain
@@ -131,7 +140,7 @@ func (j *ThreatestSchemaJsonScenariosElem) UnmarshalJSON(b []byte) error {
 // Schema for a Threatest test suite
 type ThreatestSchemaJson struct {
 	// The display name of the vulnerability
-	Scenarios []ThreatestSchemaJsonScenariosElem `json:"scenarios"`
+	Scenarios []ThreatestSchemaJsonScenariosElem `json:"scenarios" yaml:"scenarios" mapstructure:"scenarios"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -141,7 +150,7 @@ func (j *ThreatestSchemaJson) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	if v, ok := raw["scenarios"]; !ok || v == nil {
-		return fmt.Errorf("field scenarios: required")
+		return fmt.Errorf("field scenarios in ThreatestSchemaJson: required")
 	}
 	type Plain ThreatestSchemaJson
 	var plain Plain

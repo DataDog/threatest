@@ -23,7 +23,8 @@ Supported detonators:
 * Local command execution
 * SSH command execution
 * Stratus Red Team
-* AWS detonator
+* AWS CLI detonator
+* AWS detonator (programmatic only, does not work with the CLI)
 
 ### Alert matchers
 
@@ -69,11 +70,13 @@ $ export THREATEST_SSH_USERNAME=vagrant
 $ threatest run scenarios.threatest.yaml
 ```
 
-Sample scenario definition file:
+**Sample scenario definition files**
+
+* Detonating over SSH
 
 ```yaml
 scenarios:
-  # Example 1: Remote detonation over SSH
+  # Remote detonation over SSH
   # Note: SSH configuration is provided using the --ssh-host, --ssh-username and --ssh-keyfile CLI arguments
   - name: curl metadata service
     detonate:
@@ -84,14 +87,48 @@ scenarios:
         datadogSecuritySignal:
           name: "Network utility accessed cloud metadata service"
           severity: medium
+```
 
-  # Example 2: Stratus Red Team detonation
+* Detonating using Stratus Red Team
+
+```yaml
+scenarios:
+  # Stratus Red Team detonation
   # Note: You must be authenticated to the relevant cloud provider before running it
   # The example below is equivalent to manually running "stratus detonate aws.exfiltration.ec2-security-group-open-port-22-ingress"
   - name: opening a security group to the Internet
     detonate:
       stratusRedTeamDetonator:
         attackTechnique: aws.exfiltration.ec2-security-group-open-port-22-ingress
+    expectations:
+      - timeout: 15m
+        datadogSecuritySignal:
+          name: "Potential administrative port open to the world via AWS security group"
+```
+
+
+* Detonating using AWS CLI commands
+
+```yaml
+scenarios:
+  # AWS CLI detonation
+  # Note: You must be authenticated to AWS before running it and have the AWS CLI installed
+  - name: opening a security group to the Internet
+    detonate:
+      awsCliDetonator:
+        script: |
+          set -e
+          
+          # Setup
+          vpc=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query Vpc.VpcId --output text)
+          sg=$(aws ec2 create-security-group --group-name sample-sg --description "Test security group" --vpc-id $vpc --query GroupId --output text)
+          
+          # Open security group
+          aws ec2 authorize-security-group-ingress --group-id $sg --protocol tcp --port 22 --cidr 0.0.0.0/0
+          
+          # Cleanup
+          aws ec2 delete-security-group --group-id $sg
+          aws ec2 delete-vpc --vpc-id $vpc
     expectations:
       - timeout: 15m
         datadogSecuritySignal:

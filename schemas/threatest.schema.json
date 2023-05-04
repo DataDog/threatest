@@ -42,6 +42,11 @@
                 "required": [
                   "stratusRedTeamDetonator"
                 ]
+              },
+              {
+                "required": [
+                  "awsCliDetonator"
+                ]
               }
             ],
             "properties": {
@@ -53,6 +58,9 @@
               },
               "stratusRedTeamDetonator": {
                 "$ref": "stratusRedTeamDetonator.schema.json"
+              },
+              "awsCliDetonator": {
+                "$ref": "awsCliDetonator.schema.json"
               }
             }
           },

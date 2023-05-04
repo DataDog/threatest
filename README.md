@@ -73,6 +73,8 @@ Sample scenario definition file:
 
 ```yaml
 scenarios:
+  # Example 1: Remote detonation over SSH
+  # Note: SSH configuration is provided using the --ssh-host, --ssh-username and --ssh-keyfile CLI arguments
   - name: curl metadata service
     detonate:
       remoteDetonator:
@@ -83,16 +85,17 @@ scenarios:
           name: "Network utility accessed cloud metadata service"
           severity: medium
 
-  - name: running nmap
+  # Example 2: Stratus Red Team detonation
+  # Note: You must be authenticated to the relevant cloud provider before running it
+  # The example below is equivalent to manually running "stratus detonate aws.exfiltration.ec2-security-group-open-port-22-ingress"
+  - name: opening a security group to the Internet
     detonate:
-      remoteDetonator:
-        commands:
-          - "which nmap || sudo apt install -y nmap"
-          - "nmap -sn 172.16.2.1/32 -T5"
+      stratusRedTeamDetonator:
+        attackTechnique: aws.exfiltration.ec2-security-group-open-port-22-ingress
     expectations:
-      - timeout: 1m
+      - timeout: 15m
         datadogSecuritySignal:
-          name: Network scanning utility executed
+          name: "Potential administrative port open to the world via AWS security group"
 ```
 
 

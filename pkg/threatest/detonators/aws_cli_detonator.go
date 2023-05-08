@@ -39,7 +39,7 @@ func (m *AWSCLIDetonator) Detonate() (string, error) {
 	cmd.Env = append(cmd.Env, "AWS_EXECUTION_ENV=threatest_"+detonationUuid.String())
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("AWS CLI script failed. Output shown below:\n%s\n", output)
+		return "", fmt.Errorf("AWS CLI script failed. Output shown below:\n%s", output)
 	}
 
 	fmt.Println("Execution ID: " + detonationUuid.String())

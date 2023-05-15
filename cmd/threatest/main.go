@@ -1,6 +1,7 @@
 package main
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -15,6 +16,9 @@ func init() {
 }
 
 func main() {
+	if os.Getenv("THREATEST_DEBUG") == "1" {
+		log.SetLevel(log.DebugLevel)
+	}
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

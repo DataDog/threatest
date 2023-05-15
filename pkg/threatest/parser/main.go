@@ -55,6 +55,8 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 			scenario.Detonator = detonators.NewCommandDetonator(sshExecutor, commandToRun)
 		} else if stratusRedTeamDetonator := parsedScenario.Detonate.StratusRedTeamDetonator; stratusRedTeamDetonator != nil {
 			scenario.Detonator = detonators.StratusRedTeamTechnique(*stratusRedTeamDetonator.AttackTechnique)
+		} else if awsCliDetonator := parsedScenario.Detonate.AwsCliDetonator; awsCliDetonator != nil {
+			scenario.Detonator = detonators.NewAWSCLIDetonator(*awsCliDetonator.Script)
 		}
 
 		// Assertions
@@ -88,5 +90,8 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 // hasDetonation returns true if the scenario has at least 1 detonation defined
 func hasDetonation(scenario ThreatestSchemaJsonScenariosElem) bool {
 	detonations := scenario.Detonate
-	return detonations.LocalDetonator != nil || detonations.RemoteDetonator != nil || detonations.StratusRedTeamDetonator != nil
+	return detonations.LocalDetonator != nil ||
+		detonations.RemoteDetonator != nil ||
+		detonations.StratusRedTeamDetonator != nil ||
+		detonations.AwsCliDetonator != nil
 }

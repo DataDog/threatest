@@ -5,8 +5,8 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/kevinburke/ssh_config"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"net"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -56,7 +56,7 @@ func (m *SSHCommandExecutor) init() error {
 		return fmt.Errorf("unable to resolve path of private key at %s: %v", sshKey, err)
 	}
 
-	pemBytes, err := ioutil.ReadFile(sshKey)
+	pemBytes, err := os.ReadFile(sshKey)
 	if err != nil {
 		return fmt.Errorf("unable to read private key file at %s: %v", sshKey, err)
 	}

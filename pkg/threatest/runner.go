@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/datadog/threatest/pkg/threatest/matchers"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"time"
@@ -74,19 +74,20 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 	}
 	//TODO: When to clean? If we don't wait a bit, we risk missing signals that were generated after our assertion matched
 	defer m.CleanupScenario(scenario, detonationUid)
-
 	start := time.Now()
 
 	if len(scenario.Assertions) == 0 {
 		return nil
 	}
 
+	log.Debugf("Scenario '%s' detonated", scenario.Name)
+
 	// Build a queue containing all assertions
 	remainingAssertions := make(chan matchers.AlertGeneratedMatcher, len(scenario.Assertions))
 	for i := range scenario.Assertions {
 		remainingAssertions <- scenario.Assertions[i]
 	}
-
+	log.Debugf("Waiting for %d assertions", len(scenario.Assertions))
 	hasDeadline := scenario.Timeout > 0
 	deadline := start.Add(scenario.Timeout)
 	for len(remainingAssertions) > 0 {
@@ -105,6 +106,7 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 			log.Printf("%s: Confirmed that the expected signal (%s) was created in Datadog (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
 		} else {
 			// requeue assertion
+			log.Debugf("Assertion %s did not pass, requeuing it", assertion.String())
 			remainingAssertions <- assertion
 			time.Sleep(m.Interval)
 		}

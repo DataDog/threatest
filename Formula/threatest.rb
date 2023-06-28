@@ -5,21 +5,21 @@
 class Threatest < Formula
   desc ""
   homepage "https://github.com/DataDog/threatest"
-  version "1.2.0"
+  version "1.2.1"
   license "Apache-2.0"
 
   on_macos do
-    if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.0/threatest_1.2.0_Darwin_x86_64.tar.gz"
-      sha256 "d67e42ff4492a53517a1c63eb316d2738cc2ccd181e24379989438cafebe81f8"
+    if Hardware::CPU.arm?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.1/threatest_1.2.1_Darwin_arm64.tar.gz"
+      sha256 "da5dc015d0839f12a0739fe7b0f810af17d62e67ae5b8df0e32882624fdb585d"
 
       def install
         bin.install "threatest"
       end
     end
-    if Hardware::CPU.arm?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.0/threatest_1.2.0_Darwin_arm64.tar.gz"
-      sha256 "244f7373df12fec99d631ed1f0bc1ad905057bc74cfc8820afa6873776b6191e"
+    if Hardware::CPU.intel?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.1/threatest_1.2.1_Darwin_x86_64.tar.gz"
+      sha256 "4241db482a94bbd6fbb63988333fcc45ea5f37044c9bacdf343ef64ce4ec658a"
 
       def install
         bin.install "threatest"
@@ -28,17 +28,17 @@ class Threatest < Formula
   end
 
   on_linux do
-    if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.0/threatest_1.2.0_Linux_x86_64.tar.gz"
-      sha256 "7f1a5fa9152791b175ed832eb8f3292aad1cfbcbe5b701c1775f5471572704fd"
+    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.1/threatest_1.2.1_Linux_arm64.tar.gz"
+      sha256 "aaab8739077c43e1a242dc0d70dbcd49b91fc42a700598b220ef5a6cea84834b"
 
       def install
         bin.install "threatest"
       end
     end
-    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.0/threatest_1.2.0_Linux_arm64.tar.gz"
-      sha256 "a7e63287069abab8a44e237325251971d1bf8750fb8cf8b94c80cb3eefbcd5e3"
+    if Hardware::CPU.intel?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.1/threatest_1.2.1_Linux_x86_64.tar.gz"
+      sha256 "3a818637367e5cecfcd60999aaff74ab1caab8053c94c36a340c99a2cc40caf7"
 
       def install
         bin.install "threatest"

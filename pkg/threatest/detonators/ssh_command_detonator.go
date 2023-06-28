@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-uuid"
 	"github.com/kevinburke/ssh_config"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"net"
 	"os"
@@ -48,7 +49,11 @@ func (m *SSHCommandExecutor) init() error {
 
 	var sshPort = 22
 	if port := ssh_config.Get(m.SSHHostname, "Port"); port != "" {
-		sshPort, _ = strconv.Atoi(port)
+		parsedSshPort, err := strconv.Atoi(port)
+		if err != nil {
+			return fmt.Errorf("unable to parse port %s: %v", port, err)
+		}
+		sshPort = parsedSshPort
 	}
 
 	sshKey, err := resolveSSHKeyPath(sshKey)
@@ -74,14 +79,14 @@ func (m *SSHCommandExecutor) init() error {
 		Timeout:         10 * time.Second,
 	}
 
-	fmt.Println("Connecting over SSH")
+	log.Info("Connecting over SSH")
 	sshAddress := net.JoinHostPort(realHostname, strconv.Itoa(sshPort))
 	conn, err := ssh.Dial("tcp", sshAddress, config)
 	if err != nil {
 		return fmt.Errorf("unable to establish SSH connection to %s: %v", sshAddress, err)
 	}
 
-	fmt.Println("Connection succeeded")
+	log.Info("Connection succeeded")
 
 	m.SSHConnection = conn
 	return nil
@@ -112,7 +117,7 @@ func (m *SSHCommandExecutor) RunCommand(command string) (string, error) {
 
 	id, _ := uuid.GenerateUUID()
 	finalCommand := FormatCommand(command, id)
-	println("Running remote command: " + finalCommand)
+	log.Info("Running remote command: " + finalCommand)
 	if err := session.Run(finalCommand); err != nil {
 		return "", err
 	}

@@ -1,10 +1,10 @@
 package detonators
 
 import (
-	"fmt"
 	"github.com/datadog/stratus-red-team/v2/pkg/stratus"
 	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/loader"
 	stratusrunner "github.com/datadog/stratus-red-team/v2/pkg/stratus/runner"
+	log "github.com/sirupsen/logrus"
 )
 
 func StratusRedTeamTechnique(ttp string) *StratusRedTeamDetonator {
@@ -22,7 +22,7 @@ func (m *StratusRedTeamDetonator) Detonate() (string, error) {
 	ttp := m.Technique
 	stratusRunner := stratusrunner.NewRunner(ttp, stratusrunner.StratusRunnerNoForce)
 
-	fmt.Println("Detonating '" + m.Technique.ID + "' with Stratus Red Team")
+	log.Infof("Detonating '%s' with Stratus Red Team", m.Technique.ID)
 
 	defer stratusRunner.CleanUp()
 
@@ -34,7 +34,7 @@ func (m *StratusRedTeamDetonator) Detonate() (string, error) {
 	}
 
 	executionId := stratusRunner.GetUniqueExecutionId()
-	fmt.Println("Execution ID:" + executionId)
+	log.Infof("Execution ID: %s", executionId)
 
 	return executionId, nil
 

@@ -133,7 +133,7 @@ func (m *TestRunner) CleanupScenario(scenario *Scenario, detonationUid string) {
 
 	err := scenario.Assertions[0].Cleanup(detonationUid)
 	if err != nil {
-		log.Println("warning: failed to clean up generated signals: " + err.Error())
+		log.Warnf("warning: failed to clean up generated signals: %s", err.Error())
 	}
 	// TODO (code smell): this shouldn't be specific to a single assertion?
 }

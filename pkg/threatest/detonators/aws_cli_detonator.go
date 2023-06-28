@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 )
@@ -42,7 +43,7 @@ func (m *AWSCLIDetonator) Detonate() (string, error) {
 		return "", fmt.Errorf("AWS CLI script failed. Output shown below:\n%s", output)
 	}
 
-	fmt.Println("Execution ID: " + detonationUuid.String())
+	log.Infof("Execution ID: %s", detonationUuid)
 
 	return detonationUuid.String(), nil
 }

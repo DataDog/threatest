@@ -22,6 +22,10 @@
             "additionalProperties": {
                 "type": "string"
             }
+        },
+        "version": {
+            "type": "string",
+            "description": "An optional commit hash pointing to the Atomic Red Team version to use. Will default to the latest commit of the `main` branch."
         }
     }
 }

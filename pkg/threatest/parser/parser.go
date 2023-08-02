@@ -15,6 +15,10 @@ type AtomicRedTeamSchemaJson struct {
 
 	// MITRE ATT&CK technique ID
 	Technique string `json:"technique" yaml:"technique" mapstructure:"technique"`
+
+	// An optional commit hash pointing to the Atomic Red Team version to use. Will
+	// default to the latest commit of the `main` branch.
+	Version *string `json:"version,omitempty" yaml:"version,omitempty" mapstructure:"version,omitempty"`
 }
 
 // Inputs for the Atomic Red Team test case

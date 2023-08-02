@@ -1,10 +1,27 @@
 {
   "type": "object",
   "description": "Definition of a remote command detonation",
+  "oneOf": [
+    {
+      "required": [
+        "commands"
+      ]
+    },
+    {
+      "required": [
+        "atomicRedTeam"
+      ]
+    }
+  ],
   "properties": {
     "commands": {
       "type": "array",
-      "items": {"type":  "string"}
+      "items": {
+        "type": "string"
+      }
+    },
+    "atomicReadTeam": {
+      "$ref": "atomicRedTeam.schema.json"
     }
   }
 }

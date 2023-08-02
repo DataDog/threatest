@@ -2,12 +2,13 @@ package parser
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/datadog/threatest/pkg/threatest"
 	"github.com/datadog/threatest/pkg/threatest/detonators"
 	"github.com/datadog/threatest/pkg/threatest/matchers/datadog"
 	"sigs.k8s.io/yaml" // we use this library as it provides a handy "YAMLToJSON" function
-	"strings"
-	"time"
 )
 
 // Parse turns a YAML input string into a list of Threatest scenarios
@@ -42,9 +43,11 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 
 		// Detonation
 		if localDetonator := parsedScenario.Detonate.LocalDetonator; localDetonator != nil {
+			// TODO: handle Atomic Red Team
 			commandToRun := strings.Join(parsedScenario.Detonate.LocalDetonator.Commands, "; ")
 			scenario.Detonator = detonators.NewCommandDetonator(&detonators.LocalCommandExecutor{}, commandToRun)
 		} else if remoteDetonator := parsedScenario.Detonate.RemoteDetonator; remoteDetonator != nil {
+			// TODO: handle Atomic Red Team
 			commandToRun := strings.Join(remoteDetonator.Commands, "; ")
 			//TODO: decouple
 			//TODO: confirm 1 SSH executor per attack makes sense

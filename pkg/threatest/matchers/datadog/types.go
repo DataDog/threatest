@@ -2,8 +2,10 @@ package datadog
 
 import (
 	"context"
-	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
 	"os"
+
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadog"
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
 )
 
 type DatadogAlertFilter struct {
@@ -44,8 +46,8 @@ func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
 	cfg.SetUnstableOperationEnabled("SearchSecurityMonitoringSignals", true)
 
 	builder.SignalsAPI = &DatadogSecuritySignalsAPIImpl{
-		apiClient: datadog.NewAPIClient(cfg),
-		ctx:       ctx,
+		securityMonitoringAPI: datadogV2.NewSecurityMonitoringApi(datadog.NewAPIClient(cfg)),
+		ctx:                   ctx,
 	}
 	builder.AlertFilter = &DatadogAlertFilter{RuleName: name}
 	return builder

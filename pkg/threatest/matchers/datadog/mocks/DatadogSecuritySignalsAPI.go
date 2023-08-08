@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	v2datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+	v2datadog "github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
 	mock "github.com/stretchr/testify/mock"
 )
 

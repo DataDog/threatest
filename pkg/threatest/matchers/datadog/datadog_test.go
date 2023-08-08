@@ -2,32 +2,33 @@ package datadog
 
 import (
 	"fmt"
-	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+	"strconv"
+	"testing"
+
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
 	"github.com/aws/smithy-go/ptr"
 	"github.com/datadog/threatest/pkg/threatest/matchers/datadog/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"strconv"
-	"testing"
 )
 
 // Utility function to returns a sample Datadog signal
-func sampleSignal(id int) *datadog.SecurityMonitoringSignal {
-	signal := datadog.NewSecurityMonitoringSignal()
+func sampleSignal(id int) *datadogV2.SecurityMonitoringSignal {
+	signal := datadogV2.NewSecurityMonitoringSignal()
 	signal.Id = ptr.String(strconv.Itoa(id))
-	signal.Attributes = &datadog.SecurityMonitoringSignalAttributes{Attributes: map[string]interface{}{}}
+	signal.Attributes = &datadogV2.SecurityMonitoringSignalAttributes{Attributes: map[string]interface{}{}}
 	signal.Attributes.Attributes["title"] = "Sample signal " + strconv.Itoa(id)
 	return signal
 }
 
 // Utility function that generates a "universe of signals" that match either nothing, either the rule name + severity, either the
 // execution UID, either both
-func generateSignals(numSignalsMatchingNothing int, numSignalsMatchingRuleAndSeverity int, numSignalsMatchingUUID int, numSignalsMatchingBoth int, detonationUid string) ([]datadog.SecurityMonitoringSignal, []datadog.SecurityMonitoringSignal, []datadog.SecurityMonitoringSignal, []datadog.SecurityMonitoringSignal) {
-	signalsMatchingDetonationUid := make([]datadog.SecurityMonitoringSignal, 0)
-	signalsMatchingRuleAndSeverity := make([]datadog.SecurityMonitoringSignal, 0)
-	signalsMatchingNothing := make([]datadog.SecurityMonitoringSignal, 0)
-	signalsMatchingBoth := make([]datadog.SecurityMonitoringSignal, 0)
+func generateSignals(numSignalsMatchingNothing int, numSignalsMatchingRuleAndSeverity int, numSignalsMatchingUUID int, numSignalsMatchingBoth int, detonationUid string) ([]datadogV2.SecurityMonitoringSignal, []datadogV2.SecurityMonitoringSignal, []datadogV2.SecurityMonitoringSignal, []datadogV2.SecurityMonitoringSignal) {
+	signalsMatchingDetonationUid := make([]datadogV2.SecurityMonitoringSignal, 0)
+	signalsMatchingRuleAndSeverity := make([]datadogV2.SecurityMonitoringSignal, 0)
+	signalsMatchingNothing := make([]datadogV2.SecurityMonitoringSignal, 0)
+	signalsMatchingBoth := make([]datadogV2.SecurityMonitoringSignal, 0)
 
 	for i := 0; i < numSignalsMatchingNothing; i++ {
 		signalsMatchingNothing = append(signalsMatchingNothing, *sampleSignal(i))
@@ -49,8 +50,8 @@ func generateSignals(numSignalsMatchingNothing int, numSignalsMatchingRuleAndSev
 	return signalsMatchingNothing, signalsMatchingRuleAndSeverity, signalsMatchingDetonationUid, signalsMatchingBoth
 }
 
-func union(signals ...[]datadog.SecurityMonitoringSignal) []datadog.SecurityMonitoringSignal {
-	result := make([]datadog.SecurityMonitoringSignal, 0)
+func union(signals ...[]datadogV2.SecurityMonitoringSignal) []datadogV2.SecurityMonitoringSignal {
+	result := make([]datadogV2.SecurityMonitoringSignal, 0)
 	for _, signalSet := range signals {
 		result = append(result, signalSet...)
 	}

@@ -26,12 +26,17 @@ brews:
     license: Apache-2.0
     homepage: "https://github.com/DataDog/threatest"
 archives:
-  - replacements:
+  - name_template: >-
       darwin: Darwin
+      {{ .ProjectName }}_
       linux: Linux
+      {{- title .Os }}_
       windows: Windows
+      {{- if eq .Arch "amd64" }}x86_64
       386: i386
+      {{- else if eq .Arch "386" }}i386
       amd64: x86_64
+      {{- else }}{{ .Arch }}{{ end }}
 checksum:
   name_template: 'checksums.txt'
 snapshot:

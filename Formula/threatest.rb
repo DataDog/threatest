@@ -5,21 +5,21 @@
 class Threatest < Formula
   desc ""
   homepage "https://github.com/DataDog/threatest"
-  version "1.2.3"
+  version "1.2.4"
   license "Apache-2.0"
 
   on_macos do
-    if Hardware::CPU.arm?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Darwin_arm64.tar.gz"
-      sha256 "da73302d9ec39ef39cea8ac1ad695309cfade47ca7f47b5f171b2bad53d59eb6"
+    if Hardware::CPU.intel?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Darwin_x86_64.tar.gz"
+      sha256 "f2393c42bfc7edcf864f2684aa0147a3e6652e8c95f13f7131c9e05e64c2e59a"
 
       def install
         bin.install "threatest"
       end
     end
-    if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Darwin_x86_64.tar.gz"
-      sha256 "9e728515e9fc9d74c2720ef08bb62ca364ff23b4f4d698c1a4b08933746a3717"
+    if Hardware::CPU.arm?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Darwin_arm64.tar.gz"
+      sha256 "ebf12dbb8b308a9d353ea21ec3871ce33ee62b48b9f6f601b0d61c72854de847"
 
       def install
         bin.install "threatest"
@@ -28,17 +28,17 @@ class Threatest < Formula
   end
 
   on_linux do
-    if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Linux_x86_64.tar.gz"
-      sha256 "17d848c912f11363be093dda822aacc4e3c9bf01cdcf2996796dcec12a2b4b34"
+    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Linux_arm64.tar.gz"
+      sha256 "f83cb6cd17b25bb1f8dcbd2660d3133ce51ff01baad693b88ec1f7c7e06e213f"
 
       def install
         bin.install "threatest"
       end
     end
-    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Linux_arm64.tar.gz"
-      sha256 "ecdcddb82b35a4e641a7eca9fbf987facc0d2ce9231cc017d368ee1ffbfdb06c"
+    if Hardware::CPU.intel?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Linux_x86_64.tar.gz"
+      sha256 "86538a9f8e88c642d5991cde65c7d2bb9c4790d67b42085244c3a893c5c85d9a"
 
       def install
         bin.install "threatest"

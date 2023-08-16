@@ -5,21 +5,21 @@
 class Threatest < Formula
   desc ""
   homepage "https://github.com/DataDog/threatest"
-  version "1.2.2"
+  version "1.2.3"
   license "Apache-2.0"
 
   on_macos do
-    if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.2/darwin: Darwin threatest_ linux: LinuxDarwin_ windows: Windowsx86_64 386: i386.tar.gz"
-      sha256 "429426d7a6897f5101b0f9b77fbfa1f5d6a7f9f5152f7bcf13363eac7339d06c"
+    if Hardware::CPU.arm?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxDarwin_ windows: Windowsarm64.tar.gz"
+      sha256 "f5767e80aab89abb5cbaffb1813216acf0570cc31058a8917bc3fec15c13f380"
 
       def install
         bin.install "threatest"
       end
     end
-    if Hardware::CPU.arm?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.2/darwin: Darwin threatest_ linux: LinuxDarwin_ windows: Windowsarm64.tar.gz"
-      sha256 "cbc75b6f22d3e93097f33de6c250a723f487ff23edf6d65397b2e1bb544a9634"
+    if Hardware::CPU.intel?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxDarwin_ windows: Windowsx86_64 386: i386.tar.gz"
+      sha256 "e3db743ab98f6745e8bc8e1b7808c2443111147a2e1c6cb64e9ac9bc270ccb53"
 
       def install
         bin.install "threatest"
@@ -29,16 +29,16 @@ class Threatest < Formula
 
   on_linux do
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.2/darwin: Darwin threatest_ linux: LinuxLinux_ windows: Windowsarm64.tar.gz"
-      sha256 "9b873460bd533bd0f3e6b832227e4aaa0932cd219da2afe5d26bd85f28cd9d40"
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxLinux_ windows: Windowsarm64.tar.gz"
+      sha256 "50f6a76732adbc896625a8d69af5b559bb90c92676ded9a032fdc57440c7e13b"
 
       def install
         bin.install "threatest"
       end
     end
     if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.2/darwin: Darwin threatest_ linux: LinuxLinux_ windows: Windowsx86_64 386: i386.tar.gz"
-      sha256 "0b7c4a20a189e6510d5c0bce9c7225ac1001f7e546652c373479e421b1b4b536"
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxLinux_ windows: Windowsx86_64 386: i386.tar.gz"
+      sha256 "2907b614c151bbb39a4d636554a69b27e4302bcba2ad58f219d981d83457e53e"
 
       def install
         bin.install "threatest"

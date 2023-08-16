@@ -18,7 +18,7 @@ builds:
     binary: threatest
 brews:
   - name: threatest
-    tap:
+    repository:
       owner: datadog
       name: threatest
     folder: Formula

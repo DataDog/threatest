@@ -10,16 +10,16 @@ class Threatest < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxDarwin_ windows: Windowsarm64.tar.gz"
-      sha256 "f5767e80aab89abb5cbaffb1813216acf0570cc31058a8917bc3fec15c13f380"
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Darwin_arm64.tar.gz"
+      sha256 "da73302d9ec39ef39cea8ac1ad695309cfade47ca7f47b5f171b2bad53d59eb6"
 
       def install
         bin.install "threatest"
       end
     end
     if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxDarwin_ windows: Windowsx86_64 386: i386.tar.gz"
-      sha256 "e3db743ab98f6745e8bc8e1b7808c2443111147a2e1c6cb64e9ac9bc270ccb53"
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Darwin_x86_64.tar.gz"
+      sha256 "9e728515e9fc9d74c2720ef08bb62ca364ff23b4f4d698c1a4b08933746a3717"
 
       def install
         bin.install "threatest"
@@ -28,17 +28,17 @@ class Threatest < Formula
   end
 
   on_linux do
-    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxLinux_ windows: Windowsarm64.tar.gz"
-      sha256 "50f6a76732adbc896625a8d69af5b559bb90c92676ded9a032fdc57440c7e13b"
+    if Hardware::CPU.intel?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Linux_x86_64.tar.gz"
+      sha256 "17d848c912f11363be093dda822aacc4e3c9bf01cdcf2996796dcec12a2b4b34"
 
       def install
         bin.install "threatest"
       end
     end
-    if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/darwin: Darwin threatest_ linux: LinuxLinux_ windows: Windowsx86_64 386: i386.tar.gz"
-      sha256 "2907b614c151bbb39a4d636554a69b27e4302bcba2ad58f219d981d83457e53e"
+    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/DataDog/threatest/releases/download/v1.2.3/threatest_Linux_arm64.tar.gz"
+      sha256 "ecdcddb82b35a4e641a7eca9fbf987facc0d2ce9231cc017d368ee1ffbfdb06c"
 
       def install
         bin.install "threatest"

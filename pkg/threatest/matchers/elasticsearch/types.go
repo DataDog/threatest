@@ -1,24 +1,47 @@
 package elasticsearch
 
 import (
-	"context"
 	"os"
+	"time"
+	"github.com/cenkalti/backoff/v4"
+	"strings"
+	"fmt"
 
-	elasticsearch "github.com/elastic/go-elasticsearch/v8"
+	log "github.com/sirupsen/logrus"
+	es "github.com/elastic/go-elasticsearch/v8"
 )
 
+type ElasticsearchQueryResponse struct {
+	Hits struct {
+		Total struct {
+			Value    int    `json:"value"`
+		} `json:"total"`
+		Hits []ElasticsearchQueryHit `json:"hits"`
+	} `json:"hits"`
+}
+
+type ElasticsearchQueryHit struct {
+	Index  string                 `json:"_index"`
+	ID     string                 `json:"_id"`
+	Source map[string]interface{} `json:"_source"`
+}
+
 type ElasticsearchAlertFilter struct {
-	RuleName string `yaml:"rule-name"`
+	RuleName  string `yaml:"rule-name"`
+	UuidField string `yaml:"uuid-field"`
 }
 
 type ElasticsearchAlertGeneratedAssertion struct {
-	AlertAPI    ElasticsearchClient
+	AlertAPI    es.Client
 	AlertFilter *ElasticsearchAlertFilter
+	AlertId     string
+	Index       string
 }
 
-func GetElasticSearchClient() (ElasticsearchClient, error) {
+func ElasticsearchAlert(ruleName, uuidField string) *ElasticsearchAlertGeneratedAssertion {
+	retryBackoff := backoff.NewExponentialBackOff()
 	// New Elasticsearch client
-	cfg := elasticsearch.Config{
+	esClient, err := es.NewClient(es.Config{
 		Addresses: []string{os.Getenv("ELASTICSEARCH_URL")},
 		Username:  os.Getenv("ELASTICSEARCH_USERNAME"),
 		Password:  os.Getenv("ELASTICSEARCH_PASSWORD"),
@@ -33,27 +56,59 @@ func GetElasticSearchClient() (ElasticsearchClient, error) {
 		},
 		// Retry up to 5 attempts
 		MaxRetries: 5,
-	}
-	es, err := elasticsearch.NewTypedClient(cfg)
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Elasticsearch client: %w", err)
+		log.Fatalf("failed to create Elasticsearch client: %w", err)
 	}
-	info, err := es.Info().Do(ctx)
+	info, err := esClient.Info()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Elasticsearch cluster info: %w", err)
+		log.Fatalf("failed to get Elasticsearch cluster info: %w", err)
 	}
-	log.Info("Elasticsearch cluster info", "cluster_name", info.ClusterName, "version", info.Version.Number)
-	return es, nil
+	log.Info("Elasticsearch cluster info:\n", info.String())
+	return &ElasticsearchAlertGeneratedAssertion{
+		AlertAPI:    *esClient,
+		AlertFilter: &ElasticsearchAlertFilter{RuleName: ruleName, UuidField: uuidField},
+	}
 }
 
-func ElasticsearchAlert(rule, tellTale string) *ElasticsearchAlertGeneratedAssertion {
-	es, err := GetElasticSearchClient()
+
+// Dumping Ground
+func CreateIndex(m *ElasticsearchAlertGeneratedAssertion, index string) {
+	mapping := `
+    {
+      "settings": {
+        "number_of_shards": 1
+      },
+      "mappings": {
+        "properties": {
+          "field1": {
+            "type": "text"
+          },
+		  "date": {
+			"type": "date" 
+		  }
+        }
+      }
+    }`
+	res, err := m.AlertAPI.Indices.Create(
+        index,
+        m.AlertAPI.Indices.Create.WithBody(strings.NewReader(mapping)),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Println(res)
+}
+
+func WriteToIndex(m *ElasticsearchAlertGeneratedAssertion, index string) {
+	entry := `
+	{
+		"field1": "helloo there abc1234",
+		"@timestamp": "%s"
+	}`
+	res, err := m.AlertAPI.Index(index, strings.NewReader(fmt.Sprintf(entry, time.Now().Format("2006/01/02 15:04:05"))))
 	if err != nil {
-		log.Error(err, "failed to create Elasticsearch client")
-		return nil
+		log.Fatal(err)
 	}
-	return &ElasticsearchAlertGeneratedAssertion{
-		AlertAPI:    es,
-		AlertFilter: &ElasticsearchAlertFilter{RuleName: rule},
-	}
+	log.Println(res)
 }

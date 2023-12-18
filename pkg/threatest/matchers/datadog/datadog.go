@@ -146,7 +146,7 @@ func (m *DatadogAlertGeneratedAssertion) buildDatadogSignalQuery() string {
 }
 
 func (m *DatadogAlertGeneratedAssertion) signalMatchesExecution(signal datadogV2.SecurityMonitoringSignal, uid string) bool {
-	buf, _ := json.Marshal(signal.Attributes.Attributes)
+	buf, _ := json.Marshal(signal.Attributes.Custom)
 	rawSignal := string(buf)
 	return strings.Contains(rawSignal, uid)
 }

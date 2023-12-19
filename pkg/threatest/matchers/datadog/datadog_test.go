@@ -17,8 +17,8 @@ import (
 func sampleSignal(id int) *datadogV2.SecurityMonitoringSignal {
 	signal := datadogV2.NewSecurityMonitoringSignal()
 	signal.Id = ptr.String(strconv.Itoa(id))
-	signal.Attributes = &datadogV2.SecurityMonitoringSignalAttributes{Attributes: map[string]interface{}{}}
-	signal.Attributes.Attributes["title"] = "Sample signal " + strconv.Itoa(id)
+	signal.Attributes = &datadogV2.SecurityMonitoringSignalAttributes{Custom: map[string]interface{}{}}
+	signal.Attributes.Custom["title"] = "Sample signal " + strconv.Itoa(id)
 	return signal
 }
 
@@ -35,7 +35,7 @@ func generateSignals(numSignalsMatchingNothing int, numSignalsMatchingRuleAndSev
 	}
 	for i := 0; i < numSignalsMatchingUUID; i++ {
 		signal := *sampleSignal(i + numSignalsMatchingNothing)
-		signal.Attributes.Attributes["foobar"] = detonationUid
+		signal.Attributes.Custom["foobar"] = detonationUid
 		signalsMatchingDetonationUid = append(signalsMatchingDetonationUid, signal)
 	}
 	for i := 0; i < numSignalsMatchingRuleAndSeverity; i++ {
@@ -43,7 +43,7 @@ func generateSignals(numSignalsMatchingNothing int, numSignalsMatchingRuleAndSev
 	}
 	for i := 0; i < numSignalsMatchingBoth; i++ {
 		signal := *sampleSignal(i + numSignalsMatchingNothing + numSignalsMatchingUUID + numSignalsMatchingRuleAndSeverity)
-		signal.Attributes.Attributes["foobar"] = detonationUid
+		signal.Attributes.Custom["foobar"] = detonationUid
 		signalsMatchingBoth = append(signalsMatchingBoth, signal)
 	}
 

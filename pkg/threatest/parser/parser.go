@@ -5,23 +5,24 @@ package parser
 import "encoding/json"
 import "fmt"
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (j *DatadogSecuritySignalSchemaJson) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return err
-	}
-	if v, ok := raw["name"]; !ok || v == nil {
-		return fmt.Errorf("field name in DatadogSecuritySignalSchemaJson: required")
-	}
-	type Plain DatadogSecuritySignalSchemaJson
-	var plain Plain
-	if err := json.Unmarshal(b, &plain); err != nil {
-		return err
-	}
-	*j = DatadogSecuritySignalSchemaJson(plain)
-	return nil
+// Configuration of an Atomic Red Team test case
+type AtomicRedTeamSchemaJson struct {
+	// Inputs for the Atomic Red Team test case
+	Inputs AtomicRedTeamSchemaJsonInputs `json:"inputs,omitempty" yaml:"inputs,omitempty" mapstructure:"inputs,omitempty"`
+
+	// Atomic Red Team test case name
+	Name string `json:"name" yaml:"name" mapstructure:"name"`
+
+	// MITRE ATT&CK technique ID
+	Technique string `json:"technique" yaml:"technique" mapstructure:"technique"`
+
+	// An optional commit hash pointing to the Atomic Red Team version to use. Will
+	// default to the latest commit of the `master` branch.
+	Version *string `json:"version,omitempty" yaml:"version,omitempty" mapstructure:"version,omitempty"`
 }
+
+// Inputs for the Atomic Red Team test case
+type AtomicRedTeamSchemaJsonInputs map[string]string
 
 // Definition of an AWS CLI detonation
 type AwsCliDetonatorSchemaJson struct {
@@ -40,12 +41,18 @@ type DatadogSecuritySignalSchemaJson struct {
 
 // Definition of a local command detonation
 type LocalDetonatorSchemaJson struct {
+	// AtomicReadTeam corresponds to the JSON schema field "atomicReadTeam".
+	AtomicReadTeam *AtomicRedTeamSchemaJson `json:"atomicReadTeam,omitempty" yaml:"atomicReadTeam,omitempty" mapstructure:"atomicReadTeam,omitempty"`
+
 	// Commands corresponds to the JSON schema field "commands".
 	Commands []string `json:"commands,omitempty" yaml:"commands,omitempty" mapstructure:"commands,omitempty"`
 }
 
 // Definition of a remote command detonation
 type RemoteDetonatorSchemaJson struct {
+	// AtomicReadTeam corresponds to the JSON schema field "atomicReadTeam".
+	AtomicReadTeam *AtomicRedTeamSchemaJson `json:"atomicReadTeam,omitempty" yaml:"atomicReadTeam,omitempty" mapstructure:"atomicReadTeam,omitempty"`
+
 	// Commands corresponds to the JSON schema field "commands".
 	Commands []string `json:"commands,omitempty" yaml:"commands,omitempty" mapstructure:"commands,omitempty"`
 }
@@ -71,6 +78,45 @@ type ThreatestSchemaJsonScenariosElemDetonate struct {
 	// StratusRedTeamDetonator corresponds to the JSON schema field
 	// "stratusRedTeamDetonator".
 	StratusRedTeamDetonator *StratusRedTeamDetonatorSchemaJson `json:"stratusRedTeamDetonator,omitempty" yaml:"stratusRedTeamDetonator,omitempty" mapstructure:"stratusRedTeamDetonator,omitempty"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *AtomicRedTeamSchemaJson) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["name"]; !ok || v == nil {
+		return fmt.Errorf("field name in AtomicRedTeamSchemaJson: required")
+	}
+	if v, ok := raw["technique"]; !ok || v == nil {
+		return fmt.Errorf("field technique in AtomicRedTeamSchemaJson: required")
+	}
+	type Plain AtomicRedTeamSchemaJson
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = AtomicRedTeamSchemaJson(plain)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *DatadogSecuritySignalSchemaJson) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["name"]; !ok || v == nil {
+		return fmt.Errorf("field name in DatadogSecuritySignalSchemaJson: required")
+	}
+	type Plain DatadogSecuritySignalSchemaJson
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = DatadogSecuritySignalSchemaJson(plain)
+	return nil
 }
 
 // Expectations

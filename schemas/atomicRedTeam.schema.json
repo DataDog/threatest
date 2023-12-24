@@ -1,0 +1,31 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/datadog/threatest/atomicRedTeam.schema.json",
+    "description": "Configuration of an Atomic Red Team test case",
+    "type": "object",
+    "required": [
+        "technique",
+        "name"
+    ],
+    "properties": {
+        "technique": {
+            "type": "string",
+            "description": "MITRE ATT&CK technique ID"
+        },
+        "name": {
+            "type": "string",
+            "description": "Atomic Red Team test case name"
+        },
+        "inputs": {
+            "type": "object",
+            "description": "Inputs for the Atomic Red Team test case",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "version": {
+            "type": "string",
+            "description": "An optional commit hash pointing to the Atomic Red Team version to use. Will default to the latest commit of the `master` branch."
+        }
+    }
+}

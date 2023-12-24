@@ -1,8 +1,9 @@
 package parser
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParserCorrectlyParsesValidInput(t *testing.T) {
@@ -31,10 +32,25 @@ scenarios:
       - timeout: 15m
         datadogSecuritySignal:
           name: "Potential administrative port open to the world via AWS security group"
+
+  # Example 3: Atomic Red Team detonation
+  - name: deleting an AWS GuardDuty detector
+    detonate:
+      localDetonator:
+        atomicRedTeam:
+          technique: T1562.001
+          name: "AWS - GuardDuty Suspension or Deletion"
+          inputs:
+            region: us-west-1
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal:
+          name: "AWS GuardDuty detector deleted"
+          severity: high
 `
 	scenarios, err := Parse([]byte(validYaml), "", "", "")
 	assert.Nil(t, err, "parsing a valid YAML scenario file should not return an error")
-	assert.Len(t, scenarios, 2)
+	assert.Len(t, scenarios, 3)
 
 	assert.Equal(t, scenarios[0].Name, "curl metadata service")
 	assert.NotNil(t, scenarios[0].Detonator)
@@ -43,4 +59,8 @@ scenarios:
 	assert.Equal(t, scenarios[1].Name, "opening a security group to the Internet")
 	assert.NotNil(t, scenarios[1].Detonator)
 	assert.Len(t, scenarios[1].Assertions, 1)
+
+	assert.Equal(t, scenarios[2].Name, "deleting an AWS GuardDuty detector")
+	assert.NotNil(t, scenarios[2].Detonator)
+	assert.Len(t, scenarios[2].Assertions, 1)
 }

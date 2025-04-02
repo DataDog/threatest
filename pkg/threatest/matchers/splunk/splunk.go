@@ -62,6 +62,7 @@ func NewSplunkAPI(config SplunkAPIConfig) *SplunkAPIImpl {
 	}
 }
 
+// createRequest creates a new HTTP request with the appropriate headers for Splunk's API
 func (api *SplunkAPIImpl) createRequest(method, endpoint string, body io.Reader) (*http.Request, error) {
 	url := fmt.Sprintf("%s%s", api.baseURL, endpoint)
 	req, err := http.NewRequestWithContext(api.ctx, method, url, body)

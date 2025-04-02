@@ -227,8 +227,7 @@ func (s *SplunkAPIImpl) waitForJobCompletion(jobID string) error {
 			return nil
 		}
 
-		// Add a sleep between check attempts to prevent API spamming
-		// TODO make this user configurable? meh
+		// Add a sleep between check attempts to help mitigate API spamming
 		time.Sleep(2 * time.Second)
 	}
 

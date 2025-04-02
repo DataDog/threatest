@@ -263,6 +263,11 @@ func (s *SplunkAPIImpl) getSearchResults(jobID string) ([]SplunkNotable, error) 
 	}
 	defer closeBody(resp.Body)
 
+	if resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to get search results with status %d: %s", resp.StatusCode, string(body))
+	}
+
 	var results struct {
 		Results []map[string]interface{} `json:"results"`
 	}

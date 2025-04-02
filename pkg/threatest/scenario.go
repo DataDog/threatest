@@ -7,10 +7,11 @@ import (
 )
 
 type Scenario struct {
-	Name       string
-	Detonator  detonators.Detonator
-	Timeout    time.Duration
-	Assertions []matchers.AlertGeneratedMatcher
+	Name          string
+	Detonator     detonators.Detonator
+	Timeout       time.Duration
+	CheckInterval time.Duration // Duration of time between checks for all assertions
+	Assertions    []matchers.AlertGeneratedMatcher
 }
 
 type ScenarioBuilder struct {
@@ -27,6 +28,11 @@ func (m *ScenarioBuilder) WithTimeout(timeout time.Duration) *ScenarioBuilder {
 	return m
 }
 
+func (m *ScenarioBuilder) WithCheckInterval(interval time.Duration) *ScenarioBuilder {
+	m.CheckInterval = interval
+	return m
+}
+
 func (m *ScenarioBuilder) Expect(assertion matchers.AlertGeneratedMatcher) *ScenarioBuilder {
 	m.Assertions = append(m.Assertions, assertion)
 	return m
@@ -34,9 +40,10 @@ func (m *ScenarioBuilder) Expect(assertion matchers.AlertGeneratedMatcher) *Scen
 
 func (m *ScenarioBuilder) Build() *Scenario {
 	return &Scenario{
-		Name:       m.Name,
-		Detonator:  m.Detonator,
-		Timeout:    m.Timeout,
-		Assertions: m.Assertions,
+		Name:          m.Name,
+		Detonator:     m.Detonator,
+		Timeout:       m.Timeout,
+		CheckInterval: m.CheckInterval,
+		Assertions:    m.Assertions,
 	}
 }

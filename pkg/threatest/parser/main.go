@@ -5,6 +5,7 @@ import (
 	"github.com/datadog/threatest/pkg/threatest"
 	"github.com/datadog/threatest/pkg/threatest/detonators"
 	"github.com/datadog/threatest/pkg/threatest/matchers/datadog"
+	"github.com/datadog/threatest/pkg/threatest/matchers/splunk"
 	"sigs.k8s.io/yaml" // we use this library as it provides a handy "YAMLToJSON" function
 	"strings"
 	"time"
@@ -71,6 +72,15 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 				}
 				scenario.Assertions = append(scenario.Assertions, assertion)
 			}
+
+			if splunkNotableEventMatcher := parsedAssertion.SplunkNotableEvent; splunkNotableEventMatcher != nil {
+				assertion := splunk.SplunkNotableEvent(splunkNotableEventMatcher.Name)
+				assertion.WithStartTime(splunkNotableEventMatcher.StartTime)
+				if severity := splunkNotableEventMatcher.Severity; severity != nil {
+					assertion.WithSeverity(*severity)
+				}
+				scenario.Assertions = append(scenario.Assertions, assertion)
+			}
 		}
 
 		//TODO: in the threatest core, the timeout should be part of each assertion (not scenario level)
@@ -81,6 +91,14 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 			return nil, fmt.Errorf("scenario '%s' has an invalid timeout '%s': '%v'", parsedScenario.Name, rawTimeout, err)
 		}
 		scenario.Timeout = parsedDuration
+
+		// checkInterval - how often to check for the assertion
+		rawCheckInterval := parsedScenario.Expectations[0].CheckInterval
+		parsedCheckInterval, err := time.ParseDuration(rawCheckInterval)
+		if err != nil {
+			return nil, fmt.Errorf("scenario '%s' has an invalid check interval '%s': '%v'", parsedScenario.Name, rawCheckInterval, err)
+		}
+		scenario.CheckInterval = parsedCheckInterval
 
 		scenarios = append(scenarios, &scenario)
 	}

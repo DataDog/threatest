@@ -161,6 +161,7 @@ func (s *SplunkAPIImpl) buildNotableQuery(filter SplunkNotableFilter) string {
 
 	// Combine into final query
 	searchConditions := "search " + strings.Join(conditions, " ")
+	log.Debugf("Final search query: %s", searchConditions)
 	return fmt.Sprintf("%s | %s", queryStart, searchConditions)
 }
 

@@ -107,7 +107,7 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 			log.Printf("%s: Confirmed that the expected signal (%s) was created (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
 		} else {
 			// requeue assertion
-			log.Debugf("Assertion %s did not pass, requeuing it and will check again in %s", assertion.String(), scenario.CheckInterval)
+			log.Infof("Assertion %s did not pass, requeuing it and will check again in %s", assertion.String(), scenario.CheckInterval)
 			remainingAssertions <- assertion
 			time.Sleep(scenario.CheckInterval)
 		}

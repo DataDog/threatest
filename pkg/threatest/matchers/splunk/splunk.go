@@ -80,6 +80,16 @@ func (api *SplunkAPIImpl) createRequest(method, endpoint string, body io.Reader)
 	return req, nil
 }
 
+// closeBody safely closes an HTTP response body and logs any errors
+func closeBody(body io.ReadCloser) {
+	if body == nil {
+		return
+	}
+	if err := body.Close(); err != nil {
+		log.Warnf("Error closing response body: %v", err)
+	}
+}
+
 // Splunk API Operations
 
 // SearchNotables searches for notable events based on filter criteria
@@ -170,7 +180,7 @@ func (s *SplunkAPIImpl) createSearchJob(query string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to execute search request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeBody(resp.Body)
 
 	if resp.StatusCode >= 400 {
 		body, _ := io.ReadAll(resp.Body)
@@ -218,10 +228,10 @@ func (s *SplunkAPIImpl) waitForJobCompletion(jobID string) error {
 		}
 
 		if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
-			resp.Body.Close()
+			closeBody(resp.Body)
 			return fmt.Errorf("failed to parse status response: %w", err)
 		}
-		resp.Body.Close()
+		closeBody(resp.Body)
 
 		if len(status.Entry) > 0 && status.Entry[0].Content.IsDone {
 			return nil
@@ -249,7 +259,7 @@ func (s *SplunkAPIImpl) getSearchResults(jobID string) ([]SplunkNotable, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get search results: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeBody(resp.Body)
 
 	var results struct {
 		Results []map[string]interface{} `json:"results"`
@@ -297,7 +307,7 @@ func (s *SplunkAPIImpl) CloseNotable(id string) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute notable update request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeBody(resp.Body)
 
 	if resp.StatusCode >= 400 {
 		body, _ := io.ReadAll(resp.Body)
@@ -411,11 +421,6 @@ func SplunkNotableEvent(ruleName string) *SplunkNotableGeneratedAssertionBuilder
 // Factory function for the new builder pattern
 func (b *SplunkNotableGeneratedAssertionBuilder) Build() *SplunkNotableGeneratedAssertion {
 	return &b.SplunkNotableGeneratedAssertion
-}
-
-// NewSplunkNotableEventAssertion creates a new Splunk notable event assertion
-func NewSplunkNotableEventAssertion(ruleName string) *SplunkNotableGeneratedAssertion {
-	return SplunkNotableEvent(ruleName).Build()
 }
 
 // Helper function to convert SplunkNotableFilter to map

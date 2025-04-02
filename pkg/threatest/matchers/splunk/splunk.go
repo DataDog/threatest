@@ -183,7 +183,7 @@ func (s *SplunkAPIImpl) createSearchJob(query string) (string, error) {
 	}
 	defer closeBody(resp.Body)
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
 		return "", fmt.Errorf("search request failed with status %d: %s", resp.StatusCode, string(body))
 	}
@@ -306,7 +306,7 @@ func (s *SplunkAPIImpl) CloseNotable(id string) error {
 	}
 	defer closeBody(resp.Body)
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("notable update failed with status %d: %s", resp.StatusCode, string(body))
 	}

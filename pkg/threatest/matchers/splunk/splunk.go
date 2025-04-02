@@ -283,10 +283,6 @@ func (s *SplunkAPIImpl) getSearchResults(jobID string) ([]SplunkNotable, error) 
 			notable.Severity = fmt.Sprintf("%v", severity)
 		}
 
-		//if timestamp, ok := result["trigger_time_rendered"]; ok {
-		//	notable.Timestamp = fmt.Sprintf("%v", timestamp)
-		//}
-
 		notables = append(notables, notable)
 	}
 

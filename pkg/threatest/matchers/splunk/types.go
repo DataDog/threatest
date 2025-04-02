@@ -13,6 +13,7 @@ type SplunkNotable struct {
 	Custom    map[string]interface{}
 }
 
+// SplunkNotableGeneratedAssertion is a matcher for Splunk notable events
 type SplunkNotableGeneratedAssertion struct {
 	SplunkAPI     api.SplunkAPI
 	NotableFilter SplunkNotableFilter
@@ -27,10 +28,12 @@ type SplunkNotableFilter struct {
 	DetectionUID string
 }
 
+// SplunkNotableGeneratedAssertionBuilder is a builder for SplunkNotableGeneratedAssertion
 type SplunkNotableGeneratedAssertionBuilder struct {
 	SplunkNotableGeneratedAssertion
 }
 
+// WithSeverity sets the severity for the Splunk notable event search.
 func (m *SplunkNotableGeneratedAssertionBuilder) WithSeverity(severity string) *SplunkNotableGeneratedAssertionBuilder {
 	m.NotableFilter.Severity = severity
 	return m

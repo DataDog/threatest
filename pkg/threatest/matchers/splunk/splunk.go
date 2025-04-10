@@ -41,9 +41,6 @@ const (
 	NotableUpdateEndpoint = "/services/notable_update"
 )
 
-// Ensure SplunkAPIImpl implements the SplunkAPI interface
-//var _ api.SplunkAPI = &SplunkAPIImpl{}
-
 // NewSplunkAPI creates a new SplunkAPI implementation
 func NewSplunkAPI(config SplunkAPIConfig) *SplunkAPIImpl {
 	tr := &http.Transport{

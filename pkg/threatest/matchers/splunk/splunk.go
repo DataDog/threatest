@@ -345,11 +345,18 @@ func (m *SplunkNotableGeneratedAssertion) HasExpectedAlert(detonationUuid string
 }
 
 // performActionOnMatchingNotables performs an action on all matching notables
-func (m *SplunkNotableGeneratedAssertion) performActionOnMatchingNotables(executionID string, actionName string) error {
-	filterMap := convertFilterToMap(m.NotableFilter)
-	filterMap["DetectionUID"] = executionID
+func (m *SplunkNotableGeneratedAssertion) performActionOnMatchingNotables(detonationUuid string, actionName string) error {
+	// Use StartTime from filter if available, otherwise use default
+	startTime := "-2h" // Default fallback
+	if m.NotableFilter.StartTime != "" {
+		startTime = m.NotableFilter.StartTime
+	}
 
-	notables, err := m.SplunkAPI.SearchNotables(filterMap)
+	// Search for notables containing the detonation ID
+	notables, err := m.SplunkAPI.SearchNotables(map[string]string{
+		"DetectionUID": detonationUuid,
+		"StartTime":    startTime,
+	})
 	if err != nil {
 		return fmt.Errorf("unable to search for Splunk notables: %w", err)
 	}

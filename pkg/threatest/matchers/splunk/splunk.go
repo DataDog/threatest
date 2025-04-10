@@ -325,12 +325,10 @@ func (m *SplunkNotableGeneratedAssertion) notableMatchesExecution(notable map[st
 }
 
 // HasExpectedAlert checks if an expected notable exists
-func (m *SplunkNotableGeneratedAssertion) HasExpectedAlert(executionID string) (bool, error) {
+func (m *SplunkNotableGeneratedAssertion) HasExpectedAlert(detonationUuid string) (bool, error) {
 	// Create a map from the filter
 	filterMap := convertFilterToMap(m.NotableFilter)
-
-	// Store the executionID in the filter map
-	filterMap["DetectionUID"] = executionID
+	filterMap["DetectionUID"] = detonationUuid
 
 	notables, err := m.SplunkAPI.SearchNotables(filterMap)
 	if err != nil {
@@ -338,7 +336,7 @@ func (m *SplunkNotableGeneratedAssertion) HasExpectedAlert(executionID string) (
 	}
 
 	for _, notable := range notables {
-		if m.notableMatchesExecution(notable, executionID) {
+		if m.notableMatchesExecution(notable, detonationUuid) {
 			return true, nil
 		}
 	}
@@ -357,7 +355,7 @@ func (m *SplunkNotableGeneratedAssertion) performActionOnMatchingNotables(execut
 	}
 
 	for _, notable := range notables {
-		if m.notableMatchesExecution(notable, executionID) {
+		if m.notableMatchesExecution(notable, detonationUuid) {
 			id := fmt.Sprintf("%v", notable["_id"])
 			if err := m.SplunkAPI.CloseNotable(id); err != nil {
 				return fmt.Errorf("unable to %s notable %s: %w", actionName, id, err)
@@ -369,14 +367,14 @@ func (m *SplunkNotableGeneratedAssertion) performActionOnMatchingNotables(execut
 }
 
 // Assert checks for matching notables and closes them
-func (m *SplunkNotableGeneratedAssertion) Assert(executionID string) error {
-	return m.performActionOnMatchingNotables(executionID, "assert")
+func (m *SplunkNotableGeneratedAssertion) Assert(detonationUuid string) error {
+	return m.performActionOnMatchingNotables(detonationUuid, "assert")
 }
 
 // Cleanup removes any notables associated with the execution
-func (m *SplunkNotableGeneratedAssertion) Cleanup(executionID string) error {
-	log.Infof("Starting cleanup for Splunk notables related to execution ID: %s", executionID)
-	return m.performActionOnMatchingNotables(executionID, "cleanup")
+func (m *SplunkNotableGeneratedAssertion) Cleanup(detonationUuid string) error {
+	log.Infof("Starting cleanup for Splunk notables related to execution ID: %s", detonationUuid)
+	return m.performActionOnMatchingNotables(detonationUuid, "cleanup")
 }
 
 // String returns a string representation of the assertion

@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "description": "Matcher for a Splunk notable events",
+  "required": ["name", "startTime"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the Splunk search to match on (exact match)"
+    },
+    "severity": {
+      "type": "string",
+      "description": "Severity of the Splunk search to match on"
+    },
+    "startTime": {
+        "type": "string",
+        "description": "Start time of the Splunk search to match on"
+    },
+    "endTime": {
+        "type": "string",
+        "description": "End time of the Splunk search to match on"
+    }
+  }
+}

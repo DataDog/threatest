@@ -9,6 +9,8 @@ import (
 	"testing"
 )
 
+type SplunkTestNotable []map[string]interface{}
+
 // Utility function to returns a sample notable event
 func sampleNotableEvent(id int) map[string]interface{} {
 	idStr := strconv.Itoa(id)
@@ -23,11 +25,7 @@ func sampleNotableEvent(id int) map[string]interface{} {
 
 // Utility function that generates a "universe of notable events" that match either nothing, either the rule name + severity, either the
 // execution UID, either both
-func generateNotableEvents(numMatchingNothing, numMatchingRuleOnly, numMatchingUUIDOnly, numMatchingBoth int, detonationUid string) ([]map[string]interface{}, []map[string]interface{}, []map[string]interface{}, []map[string]interface{}) {
-	notablesMatchingNothing := make([]map[string]interface{}, 0)
-	notablesMatchingRuleOnly := make([]map[string]interface{}, 0)
-	notablesMatchingUUIDOnly := make([]map[string]interface{}, 0)
-	notablesMatchingBoth := make([]map[string]interface{}, 0)
+func generateNotableEvents(numMatchingNothing, numMatchingRuleOnly, numMatchingUUIDOnly, numMatchingBoth int, detonationUid string) (notablesMatchingNothing, notablesMatchingRuleOnly, notablesMatchingUUIDOnly, notablesMatchingBoth SplunkTestNotable) {
 
 	// Notables matching nothing
 	for i := 0; i < numMatchingNothing; i++ {
@@ -57,7 +55,7 @@ func generateNotableEvents(numMatchingNothing, numMatchingRuleOnly, numMatchingU
 		notablesMatchingBoth = append(notablesMatchingBoth, notable)
 	}
 
-	return notablesMatchingNothing, notablesMatchingRuleOnly, notablesMatchingUUIDOnly, notablesMatchingBoth
+	return
 }
 
 func union(notables ...[]map[string]interface{}) []map[string]interface{} {

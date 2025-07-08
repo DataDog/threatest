@@ -1,4 +1,7 @@
 # Splunk Enterprise Security notable event matcher
+
+This matcher was created/tested with Splunk Enterprise Security, Version 7.3.2 in a GovCloud environment. ES 8 is not GovCloud supported at this time, hence the lack of support/testing with the matcher, but I suspect the matcher should still work given the API endpoint for notable updates appears to be the same: [Splunk Enterprise Security 8.0 Notable Event API Reference](https://help.splunk.com/en/splunk-enterprise-security-8/rest-api-reference/8.0/notable-event-endpoints/notable-event-api-reference).
+
 To work with the Splunk Enterprise Security notable event matcher, you need to have the following prerequisites:
 - A working Splunk instance with the Enterprise Security app installed and the ability to talk to the REST API.
 - An account in Splunk with the necessary permissions to create and manage notable events.

@@ -189,7 +189,15 @@ func (m *RunCommand) runSingleScenario(scenarios <-chan *threatest.Scenario, res
 	for scenario := range scenarios {
 		runner := threatest.Threatest()
 		runner.Scenarios = append(runner.Scenarios, scenario)
-		runner.Interval = 2 * time.Second
+
+		// Use the scenario's CheckInterval if it's set, otherwise use default
+		if scenario.CheckInterval > 0 {
+			runner.Interval = scenario.CheckInterval
+			log.Debugf("Using scenario-specific check interval: %v", scenario.CheckInterval)
+		} else {
+			runner.Interval = 2 * time.Second
+			log.Debugf("Using default check interval: 2s")
+		}
 
 		start := time.Now()
 		err := runner.Run()

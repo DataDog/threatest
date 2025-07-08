@@ -24,6 +24,7 @@ func (m *TestRunner) Scenario(name string) *ScenarioBuilder {
 	builder := ScenarioBuilder{}
 	builder.Name = name
 	builder.Timeout = 10 * time.Minute // default timeout
+	builder.CheckInterval = m.Interval // default check interval
 	m.Builders = append(m.Builders, &builder)
 	return &builder
 }
@@ -103,12 +104,12 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 		}
 		if hasAlert {
 			timeSpentStr := strconv.Itoa(int(time.Since(start).Seconds()))
-			log.Printf("%s: Confirmed that the expected signal (%s) was created in Datadog (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
+			log.Printf("%s: Confirmed that the expected signal (%s) was created (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
 		} else {
 			// requeue assertion
-			log.Debugf("Assertion %s did not pass, requeuing it", assertion.String())
+			log.Infof("Assertion %s did not pass, requeuing it and will check again in %s", assertion.String(), scenario.CheckInterval)
 			remainingAssertions <- assertion
-			time.Sleep(m.Interval)
+			time.Sleep(scenario.CheckInterval)
 		}
 	}
 

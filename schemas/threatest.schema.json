@@ -74,16 +74,29 @@
                   "required": [
                     "datadogSecuritySignal"
                   ]
+                },
+                {
+                    "required": [
+                        "splunkNotableEvent"
+                    ]
                 }
               ],
               "properties": {
                 "datadogSecuritySignal": {
                   "$ref": "datadogSecuritySignal.schema.json"
                 },
+                "splunkNotableEvent": {
+                  "$ref": "splunkNotableEvent.schema.json"
+                },
                 "timeout": {
                   "type": "string",
                   "default": "5m",
                   "description": "The maximal time to wait for the assertion, written as a Go duration (e.g. 5m)"
+                },
+                "checkInterval": {
+                  "type": "string",
+                  "default": "1m",
+                  "description": "The interval to check for the assertion, written as a Go duration (e.g. 10s)"
                 }
               }
             }

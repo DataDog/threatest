@@ -162,12 +162,10 @@ func (m *TestRunner) getSignalsAPI() datadog.DatadogSecuritySignalsAPI {
 
 func (m *TestRunner) DiscoverScenario(scenario *Scenario, opts DiscoveryOptions) *DiscoveryResult {
 	result := &DiscoveryResult{ScenarioName: scenario.Name}
-	start := time.Now()
 
 	detonationUid, err := scenario.Detonator.Detonate()
 	if err != nil {
 		result.Error = err
-		result.Duration = time.Since(start)
 		return result
 	}
 	result.DetonationUID = detonationUid
@@ -181,11 +179,15 @@ func (m *TestRunner) DiscoverScenario(scenario *Scenario, opts DiscoveryOptions)
 		timeout = 5 * time.Minute
 	}
 
+	start := time.Now()
+	var consecutiveErrors int
 	for time.Since(start) < timeout {
 		signals, err := datadog.DiscoverSignals(api, detonationUid)
 		if err != nil {
+			consecutiveErrors++
 			log.Warnf("Discovery poll error (will retry): %v", err)
 		} else {
+			consecutiveErrors = 0
 			for _, sig := range signals {
 				if sig.SignalID != "" {
 					accumulated[sig.SignalID] = sig
@@ -198,6 +200,10 @@ func (m *TestRunner) DiscoverScenario(scenario *Scenario, opts DiscoveryOptions)
 		}
 
 		time.Sleep(m.Interval)
+	}
+
+	if consecutiveErrors > 0 && len(accumulated) == 0 {
+		result.Error = fmt.Errorf("all discovery polls failed, last error count: %d consecutive failures", consecutiveErrors)
 	}
 
 	for _, sig := range accumulated {

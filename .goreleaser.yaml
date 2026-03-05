@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go mod tidy
@@ -18,7 +19,7 @@ builds:
     binary: threatest
 brews:
   - name: threatest
-    repository:
+    tap:
       owner: datadog
       name: threatest
     folder: Formula

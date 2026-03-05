@@ -59,28 +59,29 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 			scenario.Detonator = detonators.NewAWSCLIDetonator(*awsCliDetonator.Script)
 		}
 
-		// Assertions
-		if len(parsedScenario.Expectations) == 0 {
-			return nil, fmt.Errorf("scenario '%s' has no assertions defined", parsedScenario.Name)
-		}
-		for _, parsedAssertion := range parsedScenario.Expectations {
-			if datadogMatcher := parsedAssertion.DatadogSecuritySignal; datadogMatcher != nil {
-				assertion := datadog.DatadogSecuritySignal(datadogMatcher.Name)
-				if severity := datadogMatcher.Severity; severity != nil {
-					assertion.WithSeverity(*severity)
+		// Assertions (optional — omitted in discovery mode)
+		if len(parsedScenario.Expectations) > 0 {
+			for _, parsedAssertion := range parsedScenario.Expectations {
+				if datadogMatcher := parsedAssertion.DatadogSecuritySignal; datadogMatcher != nil {
+					assertion := datadog.DatadogSecuritySignal(datadogMatcher.Name)
+					if severity := datadogMatcher.Severity; severity != nil {
+						assertion.WithSeverity(*severity)
+					}
+					scenario.Assertions = append(scenario.Assertions, assertion)
 				}
-				scenario.Assertions = append(scenario.Assertions, assertion)
 			}
-		}
 
-		//TODO: in the threatest core, the timeout should be part of each assertion (not scenario level)
-		// We should probably define a default timeout at the CLI level
-		rawTimeout := parsedScenario.Expectations[0].Timeout
-		parsedDuration, err := time.ParseDuration(rawTimeout)
-		if err != nil {
-			return nil, fmt.Errorf("scenario '%s' has an invalid timeout '%s': '%v'", parsedScenario.Name, rawTimeout, err)
+			//TODO: in the threatest core, the timeout should be part of each assertion (not scenario level)
+			// We should probably define a default timeout at the CLI level
+			rawTimeout := parsedScenario.Expectations[0].Timeout
+			parsedDuration, err := time.ParseDuration(rawTimeout)
+			if err != nil {
+				return nil, fmt.Errorf("scenario '%s' has an invalid timeout '%s': '%v'", parsedScenario.Name, rawTimeout, err)
+			}
+			scenario.Timeout = parsedDuration
+		} else {
+			scenario.Timeout = 5 * time.Minute
 		}
-		scenario.Timeout = parsedDuration
 
 		scenarios = append(scenarios, &scenario)
 	}

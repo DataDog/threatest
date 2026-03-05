@@ -122,10 +122,7 @@ func (j *ThreatestSchemaJsonScenariosElem) UnmarshalJSON(b []byte) error {
 	if v, ok := raw["detonate"]; !ok || v == nil {
 		return fmt.Errorf("field detonate in ThreatestSchemaJsonScenariosElem: required")
 	}
-	if v, ok := raw["expectations"]; !ok || v == nil {
-		return fmt.Errorf("field expectations in ThreatestSchemaJsonScenariosElem: required")
-	}
-	if v, ok := raw["name"]; !ok || v == nil {
+if v, ok := raw["name"]; !ok || v == nil {
 		return fmt.Errorf("field name in ThreatestSchemaJsonScenariosElem: required")
 	}
 	type Plain ThreatestSchemaJsonScenariosElem

@@ -9,7 +9,7 @@
 
 Threatest is a CLI and Go framework for testing threat detection end-to-end.
 
-Threatest allows you to **detonate** an attack technique, and verify that the alert you expect was generated in your favorite security platform.
+Threatest allows you to **detonate** an attack technique, and verify that the alert you expect was generated in your favorite security platform. It also supports a **discovery mode** that reports all alerts triggered by a detonation, enabling exploratory testing.
 
 Read the announcement blog post: https://securitylabs.datadoghq.com/articles/threatest-end-to-end-testing-threat-detection/
 
@@ -168,6 +168,49 @@ $ cat test-results.json
 
 By default, scenarios are run with a maximum parallelism of 5. You can increase this setting using the `--parallelism` argument.
 Note that when using remote SSH detonators, each scenario running establishes a new SSH connection.
+
+### Discovery mode
+
+Discovery mode lets you detonate an attack technique and discover **all** Cloud SIEM rules that triggered, rather than asserting on a specific expected signal. This is useful for exploratory testing — "what does this attack trigger?" rather than "does this attack trigger rule X?"
+
+In discovery mode, the `expectations` block is not required in the YAML scenario file:
+
+```yaml
+scenarios:
+  - name: "CloudTrail Stop"
+    detonate:
+      stratusRedTeamDetonator:
+        attackTechnique: aws.defense-evasion.cloudtrail-stop
+
+  - name: "EC2 Security Group Open Port 22 Ingress"
+    detonate:
+      stratusRedTeamDetonator:
+        attackTechnique: aws.exfiltration.ec2-security-group-open-port-22-ingress
+```
+
+Run it with the `--discover` flag:
+
+```bash
+# Wait up to 10 minutes for signals after each detonation
+$ threatest run discover.yaml --discover --timeout 10m
+
+# Stop early once at least 1 signal is found per scenario
+$ threatest run discover.yaml --discover --timeout 10m --min-signals 1
+
+# Write results to a JSON file
+$ threatest run discover.yaml --discover --timeout 10m -o results.json
+```
+
+**Sample output:**
+
+```
+INFO Running 2 scenarios in discovery mode with a parallelism of 5
+INFO Scenario 'CloudTrail Stop': discovered 2 signals in 47.32 seconds
+  - Rule: "AWS CloudTrail logging disabled" (severity: medium)
+  - Rule: "AWS CloudTrail configuration change" (severity: low)
+INFO Scenario 'EC2 Security Group Open Port 22 Ingress': discovered 1 signal in 123.45 seconds
+  - Rule: "Potential administrative port open to the world via AWS security group" (severity: high)
+```
 
 ### Using Threatest programmatically
 

@@ -1,13 +1,13 @@
 module github.com/datadog/threatest
 
 require (
-	github.com/DataDog/datadog-api-client-go/v2 v2.19.0
+	github.com/DataDog/datadog-api-client-go/v2 v2.55.0
 	github.com/aws/aws-sdk-go-v2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/config v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.23
 	github.com/aws/smithy-go v1.13.4
 	github.com/datadog/stratus-red-team/v2 v2.4.8
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.5.0
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/sirupsen/logrus v1.9.0

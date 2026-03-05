@@ -1,6 +1,8 @@
 package detonators
 
 import (
+	"fmt"
+
 	"github.com/datadog/stratus-red-team/v2/pkg/stratus"
 	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/loader"
 	stratusrunner "github.com/datadog/stratus-red-team/v2/pkg/stratus/runner"
@@ -18,7 +20,9 @@ type StratusRedTeamDetonator struct {
 }
 
 func (m *StratusRedTeamDetonator) Detonate() (string, error) {
-	// detonate a specific stratus red team TTP
+	if m.Technique == nil {
+		return "", fmt.Errorf("unknown Stratus Red Team technique (not found in registry)")
+	}
 	ttp := m.Technique
 	stratusRunner := stratusrunner.NewRunner(ttp, stratusrunner.StratusRunnerNoForce)
 

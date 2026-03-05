@@ -140,6 +140,12 @@ func (m *RunCommand) Do() error {
 		return m.doDiscover(allScenarios)
 	}
 
+	for _, scenario := range allScenarios {
+		if len(scenario.Assertions) == 0 {
+			return fmt.Errorf("scenario '%s' has no assertions defined (use --discover for discovery mode)", scenario.Name)
+		}
+	}
+
 	var hasError = false
 	results := m.runScenariosParallel(allScenarios, func(result *ScenarioRunResult) {
 		roundedDuration := math.Round(result.DurationSeconds*100) / 100

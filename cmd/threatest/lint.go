@@ -44,7 +44,7 @@ func validateScenario(scenario *threatest.Scenario) error {
 	if scenario.Detonator == nil {
 		return errors.New("no detonator defined")
 	}
-	if len(scenario.Assertions) == 0 {
+	if !scenario.HasAssertions() {
 		return errors.New("no assertion defined")
 	}
 	return nil

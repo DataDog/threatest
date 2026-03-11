@@ -142,7 +142,7 @@ func (m *RunCommand) Do() error {
 	}
 
 	for _, scenario := range allScenarios {
-		if len(scenario.Assertions) == 0 {
+		if !scenario.HasAssertions() {
 			return fmt.Errorf("scenario '%s' has no assertions defined (use --discover for discovery mode)", scenario.Name)
 		}
 	}

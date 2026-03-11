@@ -10,7 +10,12 @@ type Scenario struct {
 	Name       string
 	Detonator  detonators.Detonator
 	Timeout    time.Duration
+	// Assertions may be empty when the scenario is used in discovery mode
 	Assertions []matchers.AlertGeneratedMatcher
+}
+
+func (s *Scenario) HasAssertions() bool {
+	return len(s.Assertions) > 0
 }
 
 type ScenarioBuilder struct {

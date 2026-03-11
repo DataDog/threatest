@@ -91,7 +91,7 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 	defer m.CleanupScenario(scenario, detonationUid)
 	start := time.Now()
 
-	if len(scenario.Assertions) == 0 {
+	if !scenario.HasAssertions() {
 		return nil
 	}
 
@@ -142,7 +142,7 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 }
 
 func (m *TestRunner) CleanupScenario(scenario *Scenario, detonationUid string) {
-	if len(scenario.Assertions) == 0 {
+	if !scenario.HasAssertions() {
 		return
 	}
 

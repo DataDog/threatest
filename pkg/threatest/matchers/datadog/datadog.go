@@ -18,6 +18,7 @@ import (
 
 const QueryAllOpenSignals = `@workflow.triage.state:open`
 const QueryOpenSignalsByAlertNameAndSeverity = `@workflow.triage.state:open @workflow.rule.name:"%s" %s`
+const QueryOpenSignalsFreeText = `@workflow.triage.state:open %s`
 const QuerySeverity = `status:%s`
 
 type DatadogSecuritySignalsAPI interface {
@@ -145,8 +146,14 @@ func (m *DatadogAlertGeneratedAssertion) buildDatadogSignalQuery() string {
 	)
 }
 
-func (m *DatadogAlertGeneratedAssertion) signalMatchesExecution(signal datadogV2.SecurityMonitoringSignal, uid string) bool {
+func SignalMatchesExecution(signal datadogV2.SecurityMonitoringSignal, uid string) bool {
+	if signal.Attributes == nil {
+		return false
+	}
 	buf, _ := json.Marshal(signal.Attributes.Custom)
-	rawSignal := string(buf)
-	return strings.Contains(rawSignal, uid)
+	return strings.Contains(string(buf), uid)
+}
+
+func (m *DatadogAlertGeneratedAssertion) signalMatchesExecution(signal datadogV2.SecurityMonitoringSignal, uid string) bool {
+	return SignalMatchesExecution(signal, uid)
 }

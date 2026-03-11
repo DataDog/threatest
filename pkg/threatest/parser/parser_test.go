@@ -1,9 +1,28 @@
 package parser
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestParserParsesYAMLWithoutExpectations(t *testing.T) {
+	yamlWithoutExpectations := `
+scenarios:
+  - name: curl metadata service
+    detonate:
+      localDetonator:
+        commands: ["curl http://169.254.169.254 --connect-timeout 1"]
+`
+	scenarios, err := Parse([]byte(yamlWithoutExpectations), "", "", "")
+	assert.Nil(t, err, "parsing a YAML without expectations should not return an error")
+	assert.Len(t, scenarios, 1)
+	assert.Equal(t, "curl metadata service", scenarios[0].Name)
+	assert.NotNil(t, scenarios[0].Detonator)
+	assert.Empty(t, scenarios[0].Assertions)
+	assert.Equal(t, 5*time.Minute, scenarios[0].Timeout)
+}
 
 func TestParserCorrectlyParsesValidInput(t *testing.T) {
 	validYaml := `

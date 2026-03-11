@@ -16,8 +16,7 @@
         "description": "The list of scenarios",
         "required": [
           "name",
-          "detonate",
-          "expectations"
+          "detonate"
         ],
         "properties": {
           "name": {

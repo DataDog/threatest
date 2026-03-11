@@ -31,8 +31,7 @@ func GetDDSite() string {
 	return "datadoghq.com"
 }
 
-func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
-	builder := &DatadogAlertGeneratedAssertionBuilder{}
+func NewSignalsAPI() DatadogSecuritySignalsAPI {
 	ddApiKey := os.Getenv("DD_API_KEY")
 	ddAppKey := os.Getenv("DD_APP_KEY")
 	ctx := context.WithValue(context.Background(), datadog.ContextAPIKeys, map[string]datadog.APIKey{
@@ -45,10 +44,15 @@ func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
 	cfg := datadog.NewConfiguration()
 	cfg.SetUnstableOperationEnabled("SearchSecurityMonitoringSignals", true)
 
-	builder.SignalsAPI = &DatadogSecuritySignalsAPIImpl{
+	return &DatadogSecuritySignalsAPIImpl{
 		securityMonitoringAPI: datadogV2.NewSecurityMonitoringApi(datadog.NewAPIClient(cfg)),
 		ctx:                   ctx,
 	}
+}
+
+func DatadogSecuritySignal(name string) *DatadogAlertGeneratedAssertionBuilder {
+	builder := &DatadogAlertGeneratedAssertionBuilder{}
+	builder.SignalsAPI = NewSignalsAPI()
 	builder.AlertFilter = &DatadogAlertFilter{RuleName: name}
 	return builder
 }

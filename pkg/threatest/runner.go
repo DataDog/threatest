@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/datadog/threatest/pkg/threatest/matchers"
+	"github.com/datadog/threatest/pkg/threatest/matchers/datadog"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
@@ -11,9 +12,23 @@ import (
 )
 
 type TestRunner struct {
-	Builders  []*ScenarioBuilder
-	Scenarios []*Scenario
-	Interval  time.Duration
+	Builders   []*ScenarioBuilder
+	Scenarios  []*Scenario
+	Interval   time.Duration
+	SignalsAPI datadog.DatadogSecuritySignalsAPI
+}
+
+type DiscoveryResult struct {
+	ScenarioName  string
+	DetonationUID string
+	Signals       []datadog.DiscoveredSignal
+	Error         error
+	Duration      time.Duration
+}
+
+type DiscoveryOptions struct {
+	Timeout    time.Duration
+	MinSignals int
 }
 
 func Threatest() *TestRunner {
@@ -76,7 +91,7 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 	defer m.CleanupScenario(scenario, detonationUid)
 	start := time.Now()
 
-	if len(scenario.Assertions) == 0 {
+	if !scenario.HasAssertions() {
 		return nil
 	}
 
@@ -127,7 +142,7 @@ func (m *TestRunner) runScenario(scenario *Scenario) error {
 }
 
 func (m *TestRunner) CleanupScenario(scenario *Scenario, detonationUid string) {
-	if len(scenario.Assertions) == 0 {
+	if !scenario.HasAssertions() {
 		return
 	}
 
@@ -136,4 +151,91 @@ func (m *TestRunner) CleanupScenario(scenario *Scenario, detonationUid string) {
 		log.Warnf("warning: failed to clean up generated signals: %s", err.Error())
 	}
 	// TODO (code smell): this shouldn't be specific to a single assertion?
+}
+
+func (m *TestRunner) getSignalsAPI() datadog.DatadogSecuritySignalsAPI {
+	if m.SignalsAPI == nil {
+		m.SignalsAPI = datadog.NewSignalsAPI()
+	}
+	return m.SignalsAPI
+}
+
+func (m *TestRunner) DiscoverScenario(scenario *Scenario, opts DiscoveryOptions) *DiscoveryResult {
+	result := &DiscoveryResult{ScenarioName: scenario.Name}
+
+	detonationUid, err := scenario.Detonator.Detonate()
+	if err != nil {
+		result.Error = err
+		return result
+	}
+	result.DetonationUID = detonationUid
+
+	api := m.getSignalsAPI()
+	defer m.cleanupDiscoverySignals(api, detonationUid)
+
+	accumulated := map[string]datadog.DiscoveredSignal{}
+	timeout := opts.Timeout
+	if timeout == 0 {
+		timeout = 5 * time.Minute
+	}
+
+	start := time.Now()
+	var consecutiveErrors int
+	for time.Since(start) < timeout {
+		signals, err := datadog.DiscoverSignals(api, detonationUid)
+		if err != nil {
+			consecutiveErrors++
+			log.Warnf("Discovery poll error (will retry): %v", err)
+		} else {
+			consecutiveErrors = 0
+			for _, sig := range signals {
+				if sig.SignalID != "" {
+					accumulated[sig.SignalID] = sig
+				}
+			}
+		}
+
+		if opts.MinSignals > 0 && len(accumulated) >= opts.MinSignals {
+			break
+		}
+
+		time.Sleep(m.Interval)
+	}
+
+	if consecutiveErrors > 0 && len(accumulated) == 0 {
+		result.Error = fmt.Errorf("all discovery polls failed, last error count: %d consecutive failures", consecutiveErrors)
+	}
+
+	for _, sig := range accumulated {
+		result.Signals = append(result.Signals, sig)
+	}
+	result.Duration = time.Since(start)
+	return result
+}
+
+func (m *TestRunner) cleanupDiscoverySignals(api datadog.DatadogSecuritySignalsAPI, detonationUid string) {
+	query := fmt.Sprintf(datadog.QueryOpenSignalsFreeText, detonationUid)
+	signals, err := api.SearchSignals(query)
+	if err != nil {
+		log.Warnf("Discovery cleanup: failed to search signals: %v", err)
+		return
+	}
+	for _, signal := range signals {
+		if signal.Id == nil {
+			continue
+		}
+		if err := api.CloseSignal(*signal.Id); err != nil {
+			log.Warnf("Discovery cleanup: failed to close signal %s: %v", *signal.Id, err)
+		}
+	}
+}
+
+func (m *TestRunner) RunDiscover(opts DiscoveryOptions) []DiscoveryResult {
+	m.buildScenarios()
+	var results []DiscoveryResult
+	for _, scenario := range m.Scenarios {
+		result := m.DiscoverScenario(scenario, opts)
+		results = append(results, *result)
+	}
+	return results
 }

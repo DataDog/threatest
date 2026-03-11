@@ -12,6 +12,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -272,8 +273,11 @@ func (m *RunCommand) doDiscover(allScenarios []*threatest.Scenario) error {
 	scenarioChan := make(chan *threatest.Scenario, numWorkers)
 	resultsChan := make(chan *threatest.DiscoveryResult)
 
+	var wg sync.WaitGroup
 	for worker := 0; worker < numWorkers; worker++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			for scenario := range scenarioChan {
 				runner := threatest.Threatest()
 				runner.Scenarios = append(runner.Scenarios, scenario)
@@ -286,11 +290,15 @@ func (m *RunCommand) doDiscover(allScenarios []*threatest.Scenario) error {
 	for _, scenario := range allScenarios {
 		scenarioChan <- scenario
 	}
+	close(scenarioChan)
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
 
 	var hasError bool
 	var discoveryResults []ScenarioDiscoveryResult
-	for range allScenarios {
-		result := <-resultsChan
+	for result := range resultsChan {
 		roundedDuration := math.Round(result.Duration.Seconds()*100) / 100
 
 		if result.Error != nil {

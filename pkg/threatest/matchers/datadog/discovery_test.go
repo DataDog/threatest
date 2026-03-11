@@ -13,7 +13,7 @@ import (
 )
 
 func uidQuery(uid string) string {
-	return fmt.Sprintf(QueryOpenSignalsByExecutionUID, uid)
+	return fmt.Sprintf(QueryOpenSignalsFreeText, uid)
 }
 
 func signalWithUID(id string, uid string, ruleName string, severity string) datadogV2.SecurityMonitoringSignal {

@@ -18,7 +18,7 @@ import (
 
 const QueryAllOpenSignals = `@workflow.triage.state:open`
 const QueryOpenSignalsByAlertNameAndSeverity = `@workflow.triage.state:open @workflow.rule.name:"%s" %s`
-const QueryOpenSignalsByExecutionUID = `@workflow.triage.state:open %s`
+const QueryOpenSignalsFreeText = `@workflow.triage.state:open %s`
 const QuerySeverity = `status:%s`
 
 type DatadogSecuritySignalsAPI interface {

@@ -214,7 +214,7 @@ func (m *TestRunner) DiscoverScenario(scenario *Scenario, opts DiscoveryOptions)
 }
 
 func (m *TestRunner) cleanupDiscoverySignals(api datadog.DatadogSecuritySignalsAPI, detonationUid string) {
-	query := fmt.Sprintf(datadog.QueryOpenSignalsByExecutionUID, detonationUid)
+	query := fmt.Sprintf(datadog.QueryOpenSignalsFreeText, detonationUid)
 	signals, err := api.SearchSignals(query)
 	if err != nil {
 		log.Warnf("Discovery cleanup: failed to search signals: %v", err)

@@ -18,7 +18,7 @@ type DiscoveredSignal struct {
 }
 
 func DiscoverSignals(api DatadogSecuritySignalsAPI, detonationUid string) ([]DiscoveredSignal, error) {
-	query := fmt.Sprintf(QueryOpenSignalsByExecutionUID, detonationUid)
+	query := fmt.Sprintf(QueryOpenSignalsFreeText, detonationUid)
 	signals, err := api.SearchSignals(query)
 	if err != nil {
 		log.Warnf("Error querying signals (returning partial results): %v", err)

@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine3.20 AS builder
+FROM golang:1.26-alpine3.20 AS builder
 ARG VERSION=dev-snapshot
 RUN mkdir /build
 RUN apk add --update make gcc musl-dev

@@ -5,19 +5,30 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      id-token: write
+      contents: read
     steps:
+      - uses: DataDog/dd-octo-sts-action@96a25462dbcb10ebf0bfd6e2ccc917d2ab235b9a # v1.0.4
+        id: octo-sts
+        with:
+          scope: DataDog/threatest
+          policy: self.release.create-pr
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
+      - name: Check if tag is on main branch
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/main; then
+            echo "::error::Tag does not reference a commit on main branch"
+            exit 1
+          fi
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
@@ -30,4 +41,4 @@ jobs:
           version: "~> v2"
           args: release --clean --config .goreleaser.yaml
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}

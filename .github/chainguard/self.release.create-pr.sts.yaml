@@ -1,0 +1,16 @@
+# Policy for: .github/workflows/release.yml (goreleaser job) in DataDog/threatest
+# Grants contents:write for creating GitHub releases and pull_requests:write
+# for goreleaser to open homebrew formula update PRs.
+issuer: https://token.actions.githubusercontent.com
+
+subject_pattern: repo:DataDog/threatest:ref:refs/tags/v.*
+
+claim_pattern:
+  event_name: push
+  job_workflow_ref: DataDog/threatest/.github/workflows/release.yml@refs/tags/v.*
+  ref: refs/tags/v.*
+  repository: DataDog/threatest
+
+permissions:
+  contents: write
+  pull_requests: write

@@ -65,10 +65,11 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 		}
 		for _, parsedAssertion := range parsedScenario.Expectations {
 			if datadogMatcher := parsedAssertion.DatadogSecuritySignal; datadogMatcher != nil {
-				assertion := datadog.DatadogSecuritySignal(datadogMatcher.Name)
+				var opts []datadog.Option
 				if severity := datadogMatcher.Severity; severity != nil {
-					assertion.WithSeverity(*severity)
+					opts = append(opts, datadog.WithSeverity(*severity))
 				}
+				assertion := datadog.DatadogSecuritySignal(datadogMatcher.Name, opts...)
 				scenario.Assertions = append(scenario.Assertions, assertion)
 			}
 		}

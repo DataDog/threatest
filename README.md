@@ -180,7 +180,7 @@ threatest := Threatest()
 
 threatest.Scenario("AWS console login").
   WhenDetonating(StratusRedTeamTechnique("aws.initial-access.console-login-without-mfa")).
-  Expect(DatadogSecuritySignal("AWS Console login without MFA").WithSeverity("medium")).
+  Expect(DatadogSecuritySignal("AWS Console login without MFA", WithSeverity("medium"))).
   WithTimeout(15 * time.Minute)
 
 assert.NoError(t, threatest.Run())

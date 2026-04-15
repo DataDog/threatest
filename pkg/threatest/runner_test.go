@@ -2,12 +2,14 @@ package threatest
 
 import (
 	"errors"
+	"testing"
+	"time"
+
 	detonatorMocks "github.com/datadog/threatest/pkg/threatest/detonators/mocks"
 	"github.com/datadog/threatest/pkg/threatest/matchers"
 	matcherMocks "github.com/datadog/threatest/pkg/threatest/matchers/mocks"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
+	"github.com/stretchr/testify/mock"
 )
 
 //TODO nuke interval for tests
@@ -35,14 +37,14 @@ func TestRunnerWorks(t *testing.T) {
 
 			mockMatcher := &matcherMocks.AlertGeneratedMatcher{}
 			if len(testCase.AlertExistsSequence) == 1 {
-				mockMatcher.On("HasExpectedAlert", "my-uid").Return(testCase.AlertExistsSequence[0], nil)
+				mockMatcher.On("HasExpectedAlert", mock.Anything, "my-uid").Return(testCase.AlertExistsSequence[0], nil)
 			} else {
 				for i := range testCase.AlertExistsSequence {
-					mockMatcher.On("HasExpectedAlert", "my-uid").Return(testCase.AlertExistsSequence[i], nil).Once()
+					mockMatcher.On("HasExpectedAlert", mock.Anything, "my-uid").Return(testCase.AlertExistsSequence[i], nil).Once()
 				}
 			}
 			mockMatcher.On("String").Return("sample")
-			mockMatcher.On("Cleanup", "my-uid").Return(nil)
+			mockMatcher.On("Cleanup", mock.Anything, "my-uid").Return(nil)
 
 			var assertions []matchers.AlertGeneratedMatcher
 			assertions = []matchers.AlertGeneratedMatcher{}
@@ -70,7 +72,7 @@ func TestRunnerWorks(t *testing.T) {
 			mockDetonator.AssertNumberOfCalls(t, "Detonate", 1)
 
 			if !testCase.HasNoAssertion {
-				mockMatcher.AssertCalled(t, "Cleanup", "my-uid")
+				mockMatcher.AssertCalled(t, "Cleanup", mock.Anything, "my-uid")
 			}
 
 		})
@@ -88,8 +90,8 @@ func TestRunnerErrorHandling(t *testing.T) {
 
 	mockMatcher := &matcherMocks.AlertGeneratedMatcher{}
 	mockMatcher.On("String").Return("sample")
-	mockMatcher.On("Cleanup", "my-uid").Return(nil)
-	mockMatcher.On("HasExpectedAlert", "my-uid").Return(true, nil)
+	mockMatcher.On("Cleanup", mock.Anything, "my-uid").Return(nil)
+	mockMatcher.On("HasExpectedAlert", mock.Anything, "my-uid").Return(true, nil)
 
 	runner := TestRunner{
 		Scenarios: []*Scenario{

@@ -1,7 +1,6 @@
 package datadog
 
 import (
-	"context"
 	"os"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadog"
@@ -53,19 +52,14 @@ func GetDDSite() string {
 
 // newSignalsAPI creates a DatadogSecuritySignalsAPI with explicit credentials.
 func newSignalsAPI(apiKey, appKey, site string) DatadogSecuritySignalsAPI {
-	ctx := context.WithValue(context.Background(), datadog.ContextAPIKeys, map[string]datadog.APIKey{
-		"apiKeyAuth": {Key: apiKey},
-		"appKeyAuth": {Key: appKey},
-	})
-	ctx = context.WithValue(ctx, datadog.ContextServerVariables, map[string]string{
-		"site": site,
-	})
 	cfg := datadog.NewConfiguration()
 	cfg.SetUnstableOperationEnabled("SearchSecurityMonitoringSignals", true)
 
 	return &DatadogSecuritySignalsAPIImpl{
 		securityMonitoringAPI: datadogV2.NewSecurityMonitoringApi(datadog.NewAPIClient(cfg)),
-		ctx:                   ctx,
+		apiKey:                NewSecret(apiKey),
+		appKey:                NewSecret(appKey),
+		site:                  site,
 	}
 }
 

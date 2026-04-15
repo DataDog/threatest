@@ -1,6 +1,7 @@
 package datadog
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -39,7 +40,7 @@ func generateSignals(numSignalsMatchingNothing int, numSignalsMatchingRuleAndSev
 		signalsMatchingDetonationUid = append(signalsMatchingDetonationUid, signal)
 	}
 	for i := 0; i < numSignalsMatchingRuleAndSeverity; i++ {
-		signalsMatchingRuleAndSeverity = append(signalsMatchingRuleAndSeverity, *sampleSignal(i + numSignalsMatchingNothing + numSignalsMatchingUUID))
+		signalsMatchingRuleAndSeverity = append(signalsMatchingRuleAndSeverity, *sampleSignal(i+numSignalsMatchingNothing+numSignalsMatchingUUID))
 	}
 	for i := 0; i < numSignalsMatchingBoth; i++ {
 		signal := *sampleSignal(i + numSignalsMatchingNothing + numSignalsMatchingUUID + numSignalsMatchingRuleAndSeverity)
@@ -58,6 +59,7 @@ func union(signals ...[]datadogV2.SecurityMonitoringSignal) []datadogV2.Security
 	return result
 }
 func TestDatadog(t *testing.T) {
+	ctx := context.Background()
 	detonationUid := "my-detonation-uuid"
 	tests := []struct {
 		Name                                  string
@@ -146,16 +148,16 @@ func TestDatadog(t *testing.T) {
 				fmt.Sprintf(QuerySeverity, alertFilter.Severity)+" ",
 			)
 
-			mockDatadog.On("SearchSignals", QueryAllOpenSignals).Return(allOpenSignals, nil)
-			mockDatadog.On("SearchSignals", expectedQuery).Return(union(signalsMatchingOnlyRuleAndSeverity, signalsMatchingBoth), nil)
-			mockDatadog.On("CloseSignal", mock.AnythingOfType("string")).Return(nil)
+			mockDatadog.On("SearchSignals", mock.Anything, QueryAllOpenSignals).Return(allOpenSignals, nil)
+			mockDatadog.On("SearchSignals", mock.Anything, expectedQuery).Return(union(signalsMatchingOnlyRuleAndSeverity, signalsMatchingBoth), nil)
+			mockDatadog.On("CloseSignal", mock.Anything, mock.AnythingOfType("string")).Return(nil)
 
 			matcher := DatadogAlertGeneratedAssertion{
 				SignalsAPI:  mockDatadog,
 				AlertFilter: alertFilter,
 			}
 
-			matches, err := matcher.HasExpectedAlert(detonationUid)
+			matches, err := matcher.HasExpectedAlert(ctx, detonationUid)
 			require.Nil(t, err)
 
 			// Check expected match
@@ -166,19 +168,19 @@ func TestDatadog(t *testing.T) {
 			}
 
 			// Check if the Datadog API is queried with the expected query
-			mockDatadog.AssertCalled(t, "SearchSignals", expectedQuery) // first query to find the relevant signals
+			mockDatadog.AssertCalled(t, "SearchSignals", mock.Anything, expectedQuery) // first query to find the relevant signals
 
 			// CLEANUP
 			//TODO split test?
-			err = matcher.Cleanup(detonationUid)
+			err = matcher.Cleanup(ctx, detonationUid)
 			require.Nil(t, err)
 
 			// Every signal matching the UID (independently of whether it matches the alert name) should be closed
 			for i := 0; i < test.NumSignalsMatchingOnlyUUID; i++ {
-				mockDatadog.AssertCalled(t, "CloseSignal", *signalsMatchingOnlyDetonationUid[i].Id)
+				mockDatadog.AssertCalled(t, "CloseSignal", mock.Anything, *signalsMatchingOnlyDetonationUid[i].Id)
 			}
 			for i := 0; i < test.NumSignalsMatchingBoth; i++ {
-				mockDatadog.AssertCalled(t, "CloseSignal", *signalsMatchingBoth[i].Id)
+				mockDatadog.AssertCalled(t, "CloseSignal", mock.Anything, *signalsMatchingBoth[i].Id)
 			}
 		})
 	}

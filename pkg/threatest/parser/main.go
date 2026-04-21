@@ -54,8 +54,14 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 			}
 			scenario.Detonator = detonators.NewCommandDetonator(sshExecutor, commandToRun)
 		} else if stratusRedTeamDetonator := parsedScenario.Detonate.StratusRedTeamDetonator; stratusRedTeamDetonator != nil {
+			if stratusRedTeamDetonator.AttackTechnique == nil {
+				return nil, fmt.Errorf("scenario '%s' has a Stratus Red Team detonator with no attackTechnique defined", parsedScenario.Name)
+			}
 			scenario.Detonator = detonators.StratusRedTeamTechnique(*stratusRedTeamDetonator.AttackTechnique)
 		} else if awsCliDetonator := parsedScenario.Detonate.AwsCliDetonator; awsCliDetonator != nil {
+			if awsCliDetonator.Script == nil {
+				return nil, fmt.Errorf("scenario '%s' has an AWS CLI detonator with no script defined", parsedScenario.Name)
+			}
 			scenario.Detonator = detonators.NewAWSCLIDetonator(*awsCliDetonator.Script)
 		}
 

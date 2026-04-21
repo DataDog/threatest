@@ -5,6 +5,55 @@ import (
 	"testing"
 )
 
+// TestParserRejectsDetonatorWithMissingRequiredField ensures the parser returns
+// an error (instead of panicking with a nil pointer dereference) when a
+// detonator block is present in the YAML but its required inner field is
+// omitted.
+func TestParserRejectsDetonatorWithMissingRequiredField(t *testing.T) {
+	cases := []struct {
+		name          string
+		yamlInput     string
+		expectedError string
+	}{
+		{
+			name: "awsCliDetonator without script",
+			yamlInput: `
+scenarios:
+  - name: A
+    detonate:
+      awsCliDetonator: {}
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal:
+          name: foo
+`,
+			expectedError: "scenario 'A' has an AWS CLI detonator with no script defined",
+		},
+		{
+			name: "stratusRedTeamDetonator without attackTechnique",
+			yamlInput: `
+scenarios:
+  - name: B
+    detonate:
+      stratusRedTeamDetonator: {}
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal:
+          name: foo
+`,
+			expectedError: "scenario 'B' has a Stratus Red Team detonator with no attackTechnique defined",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			scenarios, err := Parse([]byte(tc.yamlInput), "", "", "")
+			assert.Nil(t, scenarios)
+			assert.EqualError(t, err, tc.expectedError)
+		})
+	}
+}
+
 func TestParserCorrectlyParsesValidInput(t *testing.T) {
 	validYaml := `
 scenarios:

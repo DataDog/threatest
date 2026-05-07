@@ -158,7 +158,17 @@ func (m *DatadogAlertGeneratedAssertion) buildDatadogSignalQuery() string {
 }
 
 func (m *DatadogAlertGeneratedAssertion) signalMatchesExecution(signal datadogV2.SecurityMonitoringSignal, uid string) bool {
-	buf, _ := json.Marshal(signal.Attributes.Custom)
-	rawSignal := string(buf)
-	return strings.Contains(rawSignal, uid)
+	custom := signal.Attributes.Custom
+	// The API serializes the custom fields under the JSON key "attributes" (not "custom"),
+	// so the Go client cannot deserialize them into Custom — they land in AdditionalProperties instead.
+	// See: https://github.com/DataDog/datadog-api-client-go/issues (known issue)
+	if custom == nil {
+		if ap := signal.Attributes.AdditionalProperties; ap != nil {
+			if v, ok := ap["attributes"]; ok {
+				custom, _ = v.(map[string]interface{})
+			}
+		}
+	}
+	buf, _ := json.Marshal(custom)
+	return strings.Contains(string(buf), uid)
 }

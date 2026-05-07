@@ -186,3 +186,36 @@ func TestDatadog(t *testing.T) {
 	}
 
 }
+
+func TestSignalMatchesExecution(t *testing.T) {
+	uid := "test-detonation-uid"
+	matcher := &DatadogAlertGeneratedAssertion{}
+
+	t.Run("matches when UID is in Custom (legacy path)", func(t *testing.T) {
+		signal := datadogV2.NewSecurityMonitoringSignal()
+		signal.Attributes = &datadogV2.SecurityMonitoringSignalAttributes{
+			Custom: map[string]interface{}{"foobar": uid},
+		}
+		assert.True(t, matcher.signalMatchesExecution(*signal, uid))
+	})
+
+	t.Run("matches when UID is in AdditionalProperties[attributes] (actual API response)", func(t *testing.T) {
+		signal := datadogV2.NewSecurityMonitoringSignal()
+		signal.Attributes = &datadogV2.SecurityMonitoringSignalAttributes{
+			AdditionalProperties: map[string]interface{}{
+				"attributes": map[string]interface{}{"foobar": uid},
+			},
+		}
+		assert.True(t, matcher.signalMatchesExecution(*signal, uid))
+	})
+
+	t.Run("does not match when UID is absent", func(t *testing.T) {
+		signal := datadogV2.NewSecurityMonitoringSignal()
+		signal.Attributes = &datadogV2.SecurityMonitoringSignalAttributes{
+			AdditionalProperties: map[string]interface{}{
+				"attributes": map[string]interface{}{"foobar": "other-uid"},
+			},
+		}
+		assert.False(t, matcher.signalMatchesExecution(*signal, uid))
+	})
+}

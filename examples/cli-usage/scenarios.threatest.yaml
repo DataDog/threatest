@@ -22,3 +22,15 @@ scenarios:
       - timeout: 15m
         datadogSecuritySignal:
           name: "Potential administrative port open to the world via AWS security group"
+
+  # Example 3: Asserting on an Elastic Security detection alert instead of a Datadog signal
+  # Note: Credentials are read from the KIBANA_URL and ELASTIC_API_KEY environment variables
+  - name: curl metadata service detected by Elastic
+    detonate:
+      remoteDetonator:
+        commands: ["curl http://169.254.169.254 --connect-timeout 1"]
+    expectations:
+      - timeout: 1m
+        elasticSecuritySignal:
+          name: "Network utility accessed cloud metadata service"
+          severity: medium

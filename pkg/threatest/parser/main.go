@@ -5,6 +5,7 @@ import (
 	"github.com/datadog/threatest/pkg/threatest"
 	"github.com/datadog/threatest/pkg/threatest/detonators"
 	"github.com/datadog/threatest/pkg/threatest/matchers/datadog"
+	"github.com/datadog/threatest/pkg/threatest/matchers/elastic"
 	"sigs.k8s.io/yaml" // we use this library as it provides a handy "YAMLToJSON" function
 	"strings"
 	"time"
@@ -76,6 +77,14 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 					opts = append(opts, datadog.WithSeverity(*severity))
 				}
 				assertion := datadog.DatadogSecuritySignal(datadogMatcher.Name, opts...)
+				scenario.Assertions = append(scenario.Assertions, assertion)
+			}
+			if elasticMatcher := parsedAssertion.ElasticSecuritySignal; elasticMatcher != nil {
+				var opts []elastic.Option
+				if severity := elasticMatcher.Severity; severity != nil {
+					opts = append(opts, elastic.WithSeverity(*severity))
+				}
+				assertion := elastic.ElasticSecurityAlert(elasticMatcher.Name, opts...)
 				scenario.Assertions = append(scenario.Assertions, assertion)
 			}
 		}

@@ -80,10 +80,21 @@ scenarios:
       - timeout: 15m
         datadogSecuritySignal:
           name: "Potential administrative port open to the world via AWS security group"
+
+  # Example 3: Elastic Security detection alert expectation
+  - name: curl metadata service detected by Elastic
+    detonate:
+      remoteDetonator:
+        commands: ["curl http://169.254.169.254 --connect-timeout 1"]
+    expectations:
+      - timeout: 1m
+        elasticSecuritySignal:
+          name: "Network utility accessed cloud metadata service"
+          severity: medium
 `
 	scenarios, err := Parse([]byte(validYaml), "", "", "")
 	assert.Nil(t, err, "parsing a valid YAML scenario file should not return an error")
-	assert.Len(t, scenarios, 2)
+	assert.Len(t, scenarios, 3)
 
 	assert.Equal(t, scenarios[0].Name, "curl metadata service")
 	assert.NotNil(t, scenarios[0].Detonator)
@@ -92,4 +103,9 @@ scenarios:
 	assert.Equal(t, scenarios[1].Name, "opening a security group to the Internet")
 	assert.NotNil(t, scenarios[1].Detonator)
 	assert.Len(t, scenarios[1].Assertions, 1)
+
+	assert.Equal(t, scenarios[2].Name, "curl metadata service detected by Elastic")
+	assert.NotNil(t, scenarios[2].Detonator)
+	assert.Len(t, scenarios[2].Assertions, 1)
+	assert.Equal(t, "Elastic Security alert 'Network utility accessed cloud metadata service'", scenarios[2].Assertions[0].String())
 }

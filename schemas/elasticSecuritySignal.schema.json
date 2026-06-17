@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "description": "Matcher for an Elastic Security detection alert",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the Elastic Security detection rule to match on (exact match)"
+    },
+    "severity": {
+      "type": "string",
+      "description": "Severity of the Elastic Security alert to match on"
+    }
+  }
+}

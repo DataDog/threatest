@@ -74,11 +74,19 @@
                   "required": [
                     "datadogSecuritySignal"
                   ]
+                },
+                {
+                  "required": [
+                    "elasticSecuritySignal"
+                  ]
                 }
               ],
               "properties": {
                 "datadogSecuritySignal": {
                   "$ref": "datadogSecuritySignal.schema.json"
+                },
+                "elasticSecuritySignal": {
+                  "$ref": "elasticSecuritySignal.schema.json"
                 },
                 "timeout": {
                   "type": "string",

@@ -7,16 +7,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/datadog/threatest/pkg/threatest/secret"
 )
 
 // AlertLookbackWindow bounds how far back alerts are searched, mirroring the
 // Datadog matcher which only considers signals from the past hour.
 const AlertLookbackWindow = 1 * time.Hour
+
+const requestTimeout = 30 * time.Second
 
 // ElasticSecurityDetectionAlert represents a security detection alert document in Elastic Security.
 type ElasticSecurityDetectionAlert struct {
@@ -44,30 +47,16 @@ type ElasticSecurityDetectionAlertsAPI interface {
 
 type ElasticSecurityDetectionAlertsAPIImpl struct {
 	kibanaURL string
-	apiKey    Secret
+	apiKey    secret.Secret
+	client    *http.Client
 }
 
 func (m *ElasticSecurityDetectionAlertsAPIImpl) SearchAlerts(ctx context.Context, query string) ([]ElasticSecurityDetectionAlert, error) {
-	url := fmt.Sprintf("%s/api/detection_engine/signals/search", m.kibanaURL)
-
-	log.Infof("Searching for Elastic Security alerts with query: %s", query)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(query))
+	resp, err := m.doRequest(ctx, http.MethodPost, "/api/detection_engine/signals/search", strings.NewReader(query))
 	if err != nil {
-		return nil, fmt.Errorf("error creating search request: %w", err)
-	}
-	m.setHeaders(req)
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error executing search request: %w", err)
+		return nil, fmt.Errorf("search request failed: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("search failed with status code: %d", resp.StatusCode)
-	}
 
 	var searchResp ElasticSecurityDetectionEngineSearchResponse
 	if err := json.NewDecoder(resp.Body).Decode(&searchResp); err != nil {
@@ -78,8 +67,6 @@ func (m *ElasticSecurityDetectionAlertsAPIImpl) SearchAlerts(ctx context.Context
 }
 
 func (m *ElasticSecurityDetectionAlertsAPIImpl) CloseAlert(ctx context.Context, id string) error {
-	url := fmt.Sprintf("%s/api/detection_engine/signals/status", m.kibanaURL)
-
 	payload, err := json.Marshal(map[string]interface{}{
 		"signal_ids": []string{id},
 		"status":     "closed",
@@ -88,30 +75,44 @@ func (m *ElasticSecurityDetectionAlertsAPIImpl) CloseAlert(ctx context.Context, 
 		return fmt.Errorf("error marshaling close alert payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(payload))
+	resp, err := m.doRequest(ctx, http.MethodPost, "/api/detection_engine/signals/status", bytes.NewReader(payload))
 	if err != nil {
-		return fmt.Errorf("error creating request: %w", err)
-	}
-	m.setHeaders(req)
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error executing close alert request: %w", err)
+		return fmt.Errorf("close alert request failed: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("unable to close alert, got status code " + strconv.Itoa(resp.StatusCode))
-	}
 
 	return nil
 }
 
-func (m *ElasticSecurityDetectionAlertsAPIImpl) setHeaders(req *http.Request) {
+// doRequest encapsulates the HTTP request logic for Elastic Security alerts API.
+// It validates credentials, builds the URL from kibanaURL + path, and checks for non-OK status codes.
+func (m *ElasticSecurityDetectionAlertsAPIImpl) doRequest(ctx context.Context, method, path string, body io.Reader) (*http.Response, error) {
+	if m.kibanaURL == "" || m.apiKey.Value() == "" {
+		return nil, errors.New("missing Elastic credentials: set the KIBANA_URL or ELASTIC_API_KEY env vars")
+	}
+
+	url := fmt.Sprintf("%s%s", m.kibanaURL, path)
+
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
 	req.Header.Set("Authorization", "ApiKey "+m.apiKey.Value())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("kbn-xsrf", "true")
+
+	resp, err := m.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error executing request: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("request to %s failed with status code %d", path, resp.StatusCode)
+	}
+
+	return resp, nil
 }
 
 func (m *ElasticSecurityAlertGeneratedAssertionBuilder) HasExpectedAlert(ctx context.Context, detonationUuid string) (bool, error) {

@@ -1,6 +1,11 @@
 package elastic
 
-import "os"
+import (
+	"net/http"
+	"os"
+
+	"github.com/datadog/threatest/pkg/threatest/secret"
+)
 
 // ElasticSecurityAlertFilter holds filtering criteria for Elastic Security alerts.
 type ElasticSecurityAlertFilter struct {
@@ -41,28 +46,22 @@ func WithSeverity(severity string) Option {
 	}
 }
 
-// GetKibanaURL returns the configured Kibana URL from the KIBANA_URL
-// environment variable.
-func GetKibanaURL() string {
-	return os.Getenv("KIBANA_URL")
-}
-
 // newAlertsAPI creates an ElasticSecurityDetectionAlertsAPI with explicit credentials.
 func newAlertsAPI(kibanaURL, apiKey string) ElasticSecurityDetectionAlertsAPI {
 	return &ElasticSecurityDetectionAlertsAPIImpl{
 		kibanaURL: kibanaURL,
-		apiKey:    NewSecret(apiKey),
+		apiKey:    secret.New(apiKey),
+		client:    &http.Client{Timeout: requestTimeout},
 	}
 }
 
 // ElasticSecurityAlert creates a builder for matching Elastic Security
 // detection alerts by rule name. By default, credentials are read from
-// the KIBANA_URL and ELASTIC_API_KEY environment variables. Use
-// WithCredentials to override.
+// the KIBANA_URL and ELASTIC_API_KEY environment variables. 
 func ElasticSecurityAlert(name string, opts ...Option) *ElasticSecurityAlertGeneratedAssertionBuilder {
 	builder := &ElasticSecurityAlertGeneratedAssertionBuilder{}
 	builder.AlertsAPI = newAlertsAPI(
-		GetKibanaURL(),
+		os.Getenv("KIBANA_URL"),
 		os.Getenv("ELASTIC_API_KEY"),
 	)
 	builder.AlertFilter = &ElasticSecurityAlertFilter{RuleName: name}
@@ -72,10 +71,4 @@ func ElasticSecurityAlert(name string, opts ...Option) *ElasticSecurityAlertGene
 	}
 
 	return builder
-}
-
-// Deprecated: Use WithSeverity option instead.
-func (m *ElasticSecurityAlertGeneratedAssertionBuilder) WithSeverity(severity string) *ElasticSecurityAlertGeneratedAssertionBuilder {
-	m.AlertFilter.Severity = severity
-	return m
 }

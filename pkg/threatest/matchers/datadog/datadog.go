@@ -14,6 +14,7 @@ import (
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadog"
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
 	"github.com/aws/smithy-go/ptr"
+	"github.com/datadog/threatest/pkg/threatest/secret"
 )
 
 const QueryAllOpenSignals = `@workflow.triage.state:open`
@@ -27,8 +28,8 @@ type DatadogSecuritySignalsAPI interface {
 
 type DatadogSecuritySignalsAPIImpl struct {
 	securityMonitoringAPI *datadogV2.SecurityMonitoringApi
-	apiKey                Secret
-	appKey                Secret
+	apiKey                secret.Secret
+	appKey                secret.Secret
 	site                  string
 }
 

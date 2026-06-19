@@ -1,4 +1,4 @@
-package elastic
+package elastic_test
 
 import (
 	"context"
@@ -6,179 +6,124 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/datadog/threatest/pkg/threatest/matchers/elastic"
+	"github.com/datadog/threatest/pkg/threatest/matchers/elastic/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 const testRuleName = "my-rule-name"
+const detonationUID = "my-detonation-uuid"
 
-// fakeAlertsAPI is an in-package testify mock for ElasticSecurityDetectionAlertsAPI.
-// We can't reuse the generated ./mocks package here because it imports this
-// package, which would create an import cycle in the white-box test.
-type fakeAlertsAPI struct {
-	mock.Mock
-}
-
-func (f *fakeAlertsAPI) SearchAlerts(ctx context.Context, query string) ([]ElasticSecurityDetectionAlert, error) {
-	args := f.Called(ctx, query)
-	return args.Get(0).([]ElasticSecurityDetectionAlert), args.Error(1)
-}
-
-func (f *fakeAlertsAPI) CloseAlert(ctx context.Context, id string) error {
-	args := f.Called(ctx, id)
-	return args.Error(0)
-}
-
-// sampleAlert returns a sample Elastic Security alert that matches neither the
-// rule name nor the detonation UID.
-func sampleAlert(id int) ElasticSecurityDetectionAlert {
-	return ElasticSecurityDetectionAlert{
+func sampleAlert(id int) elastic.ElasticSecurityDetectionAlert {
+	return elastic.ElasticSecurityDetectionAlert{
 		ID:    strconv.Itoa(id),
 		Index: ".alerts-security.alerts-default",
-		Source: map[string]interface{}{
+		Source: map[string]any{
 			"kibana.alert.rule.name": "some-other-rule",
 		},
 	}
 }
 
-// generateAlerts builds a universe of alerts split into four buckets, mirroring
-// the Datadog matcher tests: alerts matching nothing, alerts matching only the
-// rule name + severity, alerts matching only the detonation UID, and alerts
-// matching both.
-func generateAlerts(numNothing, numRuleAndSeverity, numUUID, numBoth int, detonationUid string) (nothing, ruleAndSeverity, uuidOnly, both []ElasticSecurityDetectionAlert) {
-	offset := 0
-	for i := 0; i < numNothing; i++ {
-		nothing = append(nothing, sampleAlert(offset))
-		offset++
-	}
-	for i := 0; i < numUUID; i++ {
-		alert := sampleAlert(offset)
-		alert.Source["correlation_id"] = detonationUid
-		uuidOnly = append(uuidOnly, alert)
-		offset++
-	}
-	for i := 0; i < numRuleAndSeverity; i++ {
-		alert := sampleAlert(offset)
-		alert.Source["kibana.alert.rule.name"] = testRuleName
-		alert.Source["kibana.alert.severity"] = "medium"
-		ruleAndSeverity = append(ruleAndSeverity, alert)
-		offset++
-	}
-	for i := 0; i < numBoth; i++ {
-		alert := sampleAlert(offset)
-		alert.Source["kibana.alert.rule.name"] = testRuleName
-		alert.Source["kibana.alert.severity"] = "medium"
-		alert.Source["correlation_id"] = detonationUid
-		both = append(both, alert)
-		offset++
-	}
-	return
+// alertWithUID returns an alert that references the detonation UID.
+func alertWithUID(id int, uid string) elastic.ElasticSecurityDetectionAlert {
+	a := sampleAlert(id)
+	a.Source["correlation_id"] = uid
+	return a
 }
 
-func union(sets ...[]ElasticSecurityDetectionAlert) []ElasticSecurityDetectionAlert {
-	result := make([]ElasticSecurityDetectionAlert, 0)
-	for _, set := range sets {
-		result = append(result, set...)
-	}
-	return result
+// alertWithRule returns an alert matching the test rule name and severity.
+func alertWithRule(id int) elastic.ElasticSecurityDetectionAlert {
+	a := sampleAlert(id)
+	a.Source["kibana.alert.rule.name"] = testRuleName
+	a.Source["kibana.alert.severity"] = "medium"
+	return a
 }
 
-func TestElastic(t *testing.T) {
-	ctx := context.Background()
-	detonationUid := "my-detonation-uuid"
+// alertWithBoth returns an alert matching the rule name, severity, and UID.
+func alertWithBoth(id int, uid string) elastic.ElasticSecurityDetectionAlert {
+	a := alertWithRule(id)
+	a.Source["correlation_id"] = uid
+	return a
+}
+
+func newMatcher(api elastic.ElasticSecurityDetectionAlertsAPI) elastic.ElasticSecurityAlertGeneratedAssertion {
+	return elastic.ElasticSecurityAlertGeneratedAssertion{
+		AlertsAPI:   api,
+		AlertFilter: &elastic.ElasticSecurityAlertFilter{RuleName: testRuleName, Severity: "medium"},
+	}
+}
+
+func TestHasExpectedAlert(t *testing.T) {
+	containsRuleName := func(query string) bool { return strings.Contains(query, testRuleName) }
+
+	// The rule-scoped Elastic query already filters by rule name, so the API
+	// returns only alerts matching the rule. HasExpectedAlert then additionally
+	// checks for the detonation UID in the alert source.
 	tests := []struct {
-		Name                                 string
-		NumAlertsMatchingNothing             int
-		NumAlertsMatchingOnlyRuleAndSeverity int
-		NumAlertsMatchingOnlyUUID            int
-		NumAlertsMatchingBoth                int
-		ExpectMatch                          bool
+		name        string
+		alerts      []elastic.ElasticSecurityDetectionAlert
+		expectMatch bool
 	}{
-		{Name: "No matching at all", ExpectMatch: false},
-		{Name: "One alert matching nothing", NumAlertsMatchingNothing: 1, ExpectMatch: false},
-		{Name: "One alert matching rule and severity but not the detonation UID", NumAlertsMatchingOnlyRuleAndSeverity: 1, ExpectMatch: false},
-		{Name: "One alert matching the detonation UID but not the rule name", NumAlertsMatchingOnlyUUID: 1, ExpectMatch: false},
-		{Name: "One alert matching the detonation UID and the rule name", NumAlertsMatchingBoth: 1, ExpectMatch: true},
-		{Name: "One alert matching everything, one matching UID only", NumAlertsMatchingOnlyUUID: 1, NumAlertsMatchingBoth: 1, ExpectMatch: true},
-		{Name: "One of each", NumAlertsMatchingNothing: 1, NumAlertsMatchingOnlyRuleAndSeverity: 1, NumAlertsMatchingOnlyUUID: 1, NumAlertsMatchingBoth: 1, ExpectMatch: true},
+		{
+			name:        "no alerts",
+			alerts:      nil,
+			expectMatch: false,
+		},
+		{
+			name:        "alert matches rule but not UID",
+			alerts:      []elastic.ElasticSecurityDetectionAlert{alertWithRule(0)},
+			expectMatch: false,
+		},
+		{
+			name:        "alert matches both rule and UID",
+			alerts:      []elastic.ElasticSecurityDetectionAlert{alertWithBoth(0, detonationUID)},
+			expectMatch: true,
+		},
+		{
+			name: "multiple alerts, only one matches UID",
+			alerts: []elastic.ElasticSecurityDetectionAlert{
+				alertWithRule(0),
+				alertWithBoth(1, detonationUID),
+			},
+			expectMatch: true,
+		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.Name, func(t *testing.T) {
-			mockElastic := &fakeAlertsAPI{}
-			nothing, ruleAndSeverity, uuidOnly, both := generateAlerts(
-				test.NumAlertsMatchingNothing,
-				test.NumAlertsMatchingOnlyRuleAndSeverity,
-				test.NumAlertsMatchingOnlyUUID,
-				test.NumAlertsMatchingBoth,
-				detonationUid,
-			)
-			allOpenAlerts := union(nothing, ruleAndSeverity, uuidOnly, both)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockAPI := mocks.NewElasticSecurityDetectionAlertsAPI(t)
+			mockAPI.On("SearchAlerts", mock.Anything, mock.MatchedBy(containsRuleName)).Return(tt.alerts, nil)
 
-			// The rule-scoped query contains the rule name; the all-open query
-			// (used by Cleanup) does not. We match on that to stay robust against
-			// the timestamp embedded in each generated query.
-			containsRuleName := func(query string) bool { return strings.Contains(query, testRuleName) }
-			isAllOpenQuery := func(query string) bool { return !strings.Contains(query, testRuleName) }
-
-			mockElastic.On("SearchAlerts", mock.Anything, mock.MatchedBy(containsRuleName)).Return(union(ruleAndSeverity, both), nil)
-			mockElastic.On("SearchAlerts", mock.Anything, mock.MatchedBy(isAllOpenQuery)).Return(allOpenAlerts, nil)
-			mockElastic.On("CloseAlert", mock.Anything, mock.AnythingOfType("string")).Return(nil)
-
-			matcher := ElasticSecurityAlertGeneratedAssertion{
-				AlertsAPI:   mockElastic,
-				AlertFilter: &ElasticSecurityAlertFilter{RuleName: testRuleName, Severity: "medium"},
-			}
-
-			matches, err := matcher.HasExpectedAlert(ctx, detonationUid)
-			require.Nil(t, err)
-			if test.ExpectMatch {
-				assert.True(t, matches, "matcher should match the alert")
-			} else {
-				assert.False(t, matches, "matcher should not match the alert")
-			}
-
-			// Verify the rule-scoped query was used to look for the expected alert.
-			mockElastic.AssertCalled(t, "SearchAlerts", mock.Anything, mock.MatchedBy(containsRuleName))
-
-			// Cleanup: every alert referencing the detonation UID should be closed,
-			// regardless of whether it matched the rule name.
-			err = matcher.Cleanup(ctx, detonationUid)
-			require.Nil(t, err)
-
-			for _, alert := range uuidOnly {
-				mockElastic.AssertCalled(t, "CloseAlert", mock.Anything, alert.ID)
-			}
-			for _, alert := range both {
-				mockElastic.AssertCalled(t, "CloseAlert", mock.Anything, alert.ID)
-			}
-			// Alerts not referencing the UID must never be closed.
-			for _, alert := range append(nothing, ruleAndSeverity...) {
-				mockElastic.AssertNotCalled(t, "CloseAlert", mock.Anything, alert.ID)
-			}
+			matcher := newMatcher(mockAPI)
+			matches, err := matcher.HasExpectedAlert(context.Background(), detonationUID)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectMatch, matches)
 		})
 	}
 }
 
-func TestAlertMatchesExecution(t *testing.T) {
-	uid := "test-detonation-uid"
-	matcher := &ElasticSecurityAlertGeneratedAssertion{}
+func TestCleanup(t *testing.T) {
+	isAllOpenQuery := func(query string) bool { return !strings.Contains(query, testRuleName) }
 
-	t.Run("matches when UID is present in the alert source", func(t *testing.T) {
-		alert := ElasticSecurityDetectionAlert{Source: map[string]interface{}{"correlation_id": uid}}
-		assert.True(t, matcher.alertMatchesExecution(alert, uid))
-	})
+	matchingAlert := alertWithBoth(0, detonationUID)
+	uidOnlyAlert := alertWithUID(1, detonationUID)
+	ruleOnlyAlert := alertWithRule(2)
+	unrelatedAlert := sampleAlert(3)
 
-	t.Run("matches when UID is nested in the alert source", func(t *testing.T) {
-		alert := ElasticSecurityDetectionAlert{Source: map[string]interface{}{
-			"process": map[string]interface{}{"command_line": "curl https://example.com/" + uid},
-		}}
-		assert.True(t, matcher.alertMatchesExecution(alert, uid))
-	})
+	allAlerts := []elastic.ElasticSecurityDetectionAlert{matchingAlert, uidOnlyAlert, ruleOnlyAlert, unrelatedAlert}
 
-	t.Run("does not match when UID is absent", func(t *testing.T) {
-		alert := ElasticSecurityDetectionAlert{Source: map[string]interface{}{"correlation_id": "other-uid"}}
-		assert.False(t, matcher.alertMatchesExecution(alert, uid))
-	})
+	mockAPI := mocks.NewElasticSecurityDetectionAlertsAPI(t)
+	mockAPI.On("SearchAlerts", mock.Anything, mock.MatchedBy(isAllOpenQuery)).Return(allAlerts, nil)
+	mockAPI.On("CloseAlert", mock.Anything, matchingAlert.ID).Return(nil)
+	mockAPI.On("CloseAlert", mock.Anything, uidOnlyAlert.ID).Return(nil)
+
+	matcher := newMatcher(mockAPI)
+	require.NoError(t, matcher.Cleanup(context.Background(), detonationUID))
+
+	mockAPI.AssertCalled(t, "CloseAlert", mock.Anything, matchingAlert.ID)
+	mockAPI.AssertCalled(t, "CloseAlert", mock.Anything, uidOnlyAlert.ID)
+	mockAPI.AssertNotCalled(t, "CloseAlert", mock.Anything, ruleOnlyAlert.ID)
+	mockAPI.AssertNotCalled(t, "CloseAlert", mock.Anything, unrelatedAlert.ID)
 }

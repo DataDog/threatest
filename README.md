@@ -32,6 +32,7 @@ An **alert matcher** is a platform-specific integration that can check if an exp
 
 Supported alert matchers:
 * Datadog security signals
+* Elastic Security signals
 
 ### Detonation and alert correlation
 

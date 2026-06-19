@@ -1,4 +1,7 @@
-package datadog
+// Package secret provides a string wrapper that redacts its value when logged
+// or serialised. It is used to hold credentials (e.g. API keys) without
+// risking accidental leaks through logs, error messages, or JSON output.
+package secret
 
 import "fmt"
 
@@ -14,8 +17,8 @@ type Secret struct {
 
 const redactedValue = "[REDACTED]"
 
-// NewSecret wraps a sensitive string.
-func NewSecret(value string) Secret {
+// New wraps a sensitive string.
+func New(value string) Secret {
 	return Secret{value: value}
 }
 
@@ -36,7 +39,7 @@ func (s Secret) GoString() string {
 
 // MarshalJSON returns a redacted JSON string.
 func (s Secret) MarshalJSON() ([]byte, error) {
-	return []byte(redactedValue), nil
+	return []byte(`"` + redactedValue + `"`), nil
 }
 
 // MarshalText returns a redacted text representation.

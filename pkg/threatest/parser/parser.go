@@ -23,6 +23,24 @@ func (j *DatadogSecuritySignalSchemaJson) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
+func (j *ElasticSecuritySignalSchemaJson) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["name"]; !ok || v == nil {
+		return fmt.Errorf("field name in ElasticSecuritySignalSchemaJson: required")
+	}
+	type Plain ElasticSecuritySignalSchemaJson
+	var plain Plain
+	if err := json.Unmarshal(b, &plain); err != nil {
+		return err
+	}
+	*j = ElasticSecuritySignalSchemaJson(plain)
+	return nil
+}
+
 // Definition of an AWS CLI detonation
 type AwsCliDetonatorSchemaJson struct {
 	// Script corresponds to the JSON schema field "script".
@@ -35,6 +53,15 @@ type DatadogSecuritySignalSchemaJson struct {
 	Name string `json:"name" yaml:"name" mapstructure:"name"`
 
 	// Severity of the Datadog signal to match on
+	Severity *string `json:"severity,omitempty" yaml:"severity,omitempty" mapstructure:"severity,omitempty"`
+}
+
+// Matcher for an Elastic Security detection alert
+type ElasticSecuritySignalSchemaJson struct {
+	// Name of the Elastic Security detection rule to match on (exact match)
+	Name string `json:"name" yaml:"name" mapstructure:"name"`
+
+	// Severity of the Elastic Security alert to match on
 	Severity *string `json:"severity,omitempty" yaml:"severity,omitempty" mapstructure:"severity,omitempty"`
 }
 
@@ -78,6 +105,10 @@ type ThreatestSchemaJsonScenariosElemExpectationsElem struct {
 	// DatadogSecuritySignal corresponds to the JSON schema field
 	// "datadogSecuritySignal".
 	DatadogSecuritySignal *DatadogSecuritySignalSchemaJson `json:"datadogSecuritySignal,omitempty" yaml:"datadogSecuritySignal,omitempty" mapstructure:"datadogSecuritySignal,omitempty"`
+
+	// ElasticSecuritySignal corresponds to the JSON schema field
+	// "elasticSecuritySignal".
+	ElasticSecuritySignal *ElasticSecuritySignalSchemaJson `json:"elasticSecuritySignal,omitempty" yaml:"elasticSecuritySignal,omitempty" mapstructure:"elasticSecuritySignal,omitempty"`
 
 	// The maximal time to wait for the assertion, written as a Go duration (e.g. 5m)
 	Timeout string `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout,omitempty"`

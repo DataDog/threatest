@@ -5,6 +5,7 @@ import (
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadog"
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
+	"github.com/datadog/threatest/pkg/threatest/secret"
 )
 
 type DatadogAlertFilter struct {
@@ -57,8 +58,8 @@ func newSignalsAPI(apiKey, appKey, site string) DatadogSecuritySignalsAPI {
 
 	return &DatadogSecuritySignalsAPIImpl{
 		securityMonitoringAPI: datadogV2.NewSecurityMonitoringApi(datadog.NewAPIClient(cfg)),
-		apiKey:                NewSecret(apiKey),
-		appKey:                NewSecret(appKey),
+		apiKey:                secret.New(apiKey),
+		appKey:                secret.New(appKey),
 		site:                  site,
 	}
 }

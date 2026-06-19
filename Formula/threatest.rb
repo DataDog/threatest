@@ -5,42 +5,40 @@
 class Threatest < Formula
   desc ""
   homepage "https://github.com/DataDog/threatest"
-  version "1.2.4"
+  version "1.4.0"
   license "Apache-2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Darwin_x86_64.tar.gz"
-      sha256 "f2393c42bfc7edcf864f2684aa0147a3e6652e8c95f13f7131c9e05e64c2e59a"
+      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Darwin_x86_64.tar.gz"
+      sha256 "5f74325a91895e119b9ba0e6da7437042b2ca9cb716970841334600aabe95b6c"
 
-      def install
+      define_method(:install) do
         bin.install "threatest"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Darwin_arm64.tar.gz"
-      sha256 "ebf12dbb8b308a9d353ea21ec3871ce33ee62b48b9f6f601b0d61c72854de847"
+      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Darwin_arm64.tar.gz"
+      sha256 "b436c02d44379e6d6bd11aecb6546f8675bf2a9c0175f77966fae17c77e67cfd"
 
-      def install
+      define_method(:install) do
         bin.install "threatest"
       end
     end
   end
 
   on_linux do
-    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Linux_arm64.tar.gz"
-      sha256 "f83cb6cd17b25bb1f8dcbd2660d3133ce51ff01baad693b88ec1f7c7e06e213f"
-
-      def install
+    if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
+      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Linux_x86_64.tar.gz"
+      sha256 "cd69e7c224e6fb57354e0b4d25b119cbf335d62863f50058f8d3401a6abe0808"
+      define_method(:install) do
         bin.install "threatest"
       end
     end
-    if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.2.4/threatest_Linux_x86_64.tar.gz"
-      sha256 "86538a9f8e88c642d5991cde65c7d2bb9c4790d67b42085244c3a893c5c85d9a"
-
-      def install
+    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Linux_arm64.tar.gz"
+      sha256 "6193fe312ddd666677880da1669c136d93bfc9162d50eefaa5b808f0bc546f77"
+      define_method(:install) do
         bin.install "threatest"
       end
     end

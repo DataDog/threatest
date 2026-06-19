@@ -28,14 +28,8 @@ type ElasticSecurityDetectionAlert struct {
 	Source map[string]interface{} `json:"_source"`
 }
 
-// ElasticSecurityDetectionEngineSearchResponse represents the response from the
-// Kibana Detection Engine search API.
-type ElasticSecurityDetectionEngineSearchResponse struct {
-	Took int `json:"took"`
+type elasticSearchResponse struct {
 	Hits struct {
-		Total struct {
-			Value int `json:"value"`
-		} `json:"total"`
 		Hits []ElasticSecurityDetectionAlert `json:"hits"`
 	} `json:"hits"`
 }
@@ -58,7 +52,7 @@ func (m *ElasticSecurityDetectionAlertsAPIImpl) SearchAlerts(ctx context.Context
 	}
 	defer resp.Body.Close()
 
-	var searchResp ElasticSecurityDetectionEngineSearchResponse
+	var searchResp elasticSearchResponse
 	if err := json.NewDecoder(resp.Body).Decode(&searchResp); err != nil {
 		return nil, fmt.Errorf("error parsing search response: %w", err)
 	}

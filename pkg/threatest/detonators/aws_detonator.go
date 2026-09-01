@@ -56,7 +56,7 @@ func customUserAgentMiddleware(uniqueId uuid.UUID) middleware.BuildMiddleware {
 		if !ok {
 			return out, metadata, fmt.Errorf("unknown transport type %T", input.Request)
 		}
-		request.Header.Set("User-Agent", fmt.Sprintf("threatest_"+uniqueId.String()))
+		request.Header.Set("User-Agent", fmt.Sprintf("threatest_%s", uniqueId.String()))
 
 		return next.HandleBuild(ctx, input)
 	})

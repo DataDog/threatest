@@ -4,14 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/datadog/threatest/pkg/threatest"
-	"github.com/datadog/threatest/pkg/threatest/parser"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
+	"maps"
 	"math"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/datadog/threatest/pkg/threatest"
+	"github.com/datadog/threatest/pkg/threatest/matchers"
+	"github.com/datadog/threatest/pkg/threatest/parser"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 // RunCommand implements the command to run Threatest test scenarios
@@ -29,12 +32,17 @@ type SSHConfiguration struct {
 }
 
 type ScenarioRunResult struct {
-	Description     string    `json:"description"`
-	Success         bool      `json:"isSuccess"`
-	ErrorMessage    string    `json:"errorMessage"`
-	DurationSeconds float64   `json:"durationSeconds"`
-	TimeDetonated   time.Time `json:"timeDetonated"`
+	Description     string             `json:"description"`
+	Success         bool               `json:"isSuccess"`
+	ErrorMessage    string             `json:"errorMessage"`
+	DurationSeconds float64            `json:"durationSeconds"`
+	TimeDetonated   time.Time          `json:"timeDetonated"`
+	Discovered      *DiscoveredResults `json:"discovered,omitempty"`
 	//TODO: We possibly want to add some metadata about the kind of detonation
+}
+
+type DiscoveredResults struct {
+	Objects map[string]matchers.ThreatestEvent `json:"objects,omitempty"`
 }
 
 func NewRunCommand() *cobra.Command {
@@ -114,6 +122,7 @@ func (m *RunCommand) Do() error {
 			hasError = true
 			log.Errorf("Scenario '%s' failed in %.2f seconds: %s", result.Description, roundedDuration, result.ErrorMessage)
 		}
+		printDiscovered(result)
 	})
 
 	// Handle output file
@@ -206,6 +215,7 @@ func (m *RunCommand) runSingleScenario(scenarios <-chan *threatest.Scenario, res
 			Success:         err == nil,
 			DurationSeconds: end.Sub(start).Seconds(),
 			TimeDetonated:   start,
+			Discovered:      collectDiscovered(scenario),
 		}
 	}
 }
@@ -221,4 +231,24 @@ func (m *RunCommand) writeJsonOutput(results []ScenarioRunResult) error {
 	}
 
 	return nil
+}
+
+func collectDiscovered(scenario *threatest.Scenario) *DiscoveredResults {
+	dr := DiscoveredResults{
+		Objects: map[string]matchers.ThreatestEvent{},
+	}
+	for i := range scenario.TelemetryAssertions {
+		maps.Copy(dr.Objects, scenario.TelemetryAssertions[i].Discovered)
+	}
+	if len(dr.Objects) == 0 {
+		return nil
+	}
+	return &dr
+}
+
+func printDiscovered(result *ScenarioRunResult) {
+	if result.Discovered == nil {
+		return
+	}
+	log.Infof("  Discovered %d objects total", len(result.Discovered.Objects))
 }

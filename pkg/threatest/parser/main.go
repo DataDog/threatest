@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"github.com/datadog/threatest/pkg/threatest"
 	"github.com/datadog/threatest/pkg/threatest/detonators"
-	"github.com/datadog/threatest/pkg/threatest/matchers/datadog"
+	"github.com/datadog/threatest/pkg/threatest/matchers"
+	"github.com/datadog/threatest/pkg/threatest/matchers/datadog/agentevents"
+	"github.com/datadog/threatest/pkg/threatest/matchers/datadog/logs"
+	"github.com/datadog/threatest/pkg/threatest/matchers/datadog/signals"
 	"github.com/datadog/threatest/pkg/threatest/matchers/elastic"
 	"sigs.k8s.io/yaml" // we use this library as it provides a handy "YAMLToJSON" function
 	"strings"
@@ -66,27 +69,11 @@ func buildScenarios(parsed *ThreatestSchemaJson, sshHostname string, sshUsername
 			scenario.Detonator = detonators.NewAWSCLIDetonator(*awsCliDetonator.Script)
 		}
 
-		// Assertions
 		if len(parsedScenario.Expectations) == 0 {
 			return nil, fmt.Errorf("scenario '%s' has no assertions defined", parsedScenario.Name)
 		}
-		for _, parsedAssertion := range parsedScenario.Expectations {
-			if datadogMatcher := parsedAssertion.DatadogSecuritySignal; datadogMatcher != nil {
-				var opts []datadog.Option
-				if severity := datadogMatcher.Severity; severity != nil {
-					opts = append(opts, datadog.WithSeverity(*severity))
-				}
-				assertion := datadog.DatadogSecuritySignal(datadogMatcher.Name, opts...)
-				scenario.Assertions = append(scenario.Assertions, assertion)
-			}
-			if elasticMatcher := parsedAssertion.ElasticSecuritySignal; elasticMatcher != nil {
-				var opts []elastic.Option
-				if severity := elasticMatcher.Severity; severity != nil {
-					opts = append(opts, elastic.WithSeverity(*severity))
-				}
-				assertion := elastic.ElasticSecurityAlert(elasticMatcher.Name, opts...)
-				scenario.Assertions = append(scenario.Assertions, assertion)
-			}
+		if err := buildAssertions(&parsedScenario, &scenario); err != nil {
+			return nil, err
 		}
 
 		//TODO: in the threatest core, the timeout should be part of each assertion (not scenario level)
@@ -110,4 +97,63 @@ func hasDetonation(scenario ThreatestSchemaJsonScenariosElem) bool {
 		detonations.RemoteDetonator != nil ||
 		detonations.StratusRedTeamDetonator != nil ||
 		detonations.AwsCliDetonator != nil
+}
+
+func buildAssertions(parsedScenario *ThreatestSchemaJsonScenariosElem, scenario *threatest.Scenario) error {
+	for _, parsedAssertion := range parsedScenario.Expectations {
+		if datadogMatcher := parsedAssertion.DatadogSecuritySignal; datadogMatcher != nil {
+			if datadogMatcher.Query != nil && !parsedAssertion.Discover {
+				return fmt.Errorf("scenario '%s': query on datadogSecuritySignal is only supported with discover: true", parsedScenario.Name)
+			}
+			if (datadogMatcher.Name == nil || *datadogMatcher.Name == "") && !parsedAssertion.Discover {
+				return fmt.Errorf("scenario '%s': datadogSecuritySignal.name is required when discover is false", parsedScenario.Name)
+			}
+			var opts []signals.Option
+			if severity := datadogMatcher.Severity; severity != nil {
+				opts = append(opts, signals.WithSeverity(*severity))
+			}
+			name := derefStr(datadogMatcher.Name)
+			addAssertion(scenario, signals.DatadogSecuritySignal(name, opts...), parsedAssertion, derefStr(datadogMatcher.Query))
+		}
+		if elasticMatcher := parsedAssertion.ElasticSecuritySignal; elasticMatcher != nil {
+			if parsedAssertion.Discover {
+				return fmt.Errorf("scenario '%s': discover mode is not supported for Elastic Security alerts", parsedScenario.Name)
+			}
+			var opts []elastic.Option
+			if severity := elasticMatcher.Severity; severity != nil {
+				opts = append(opts, elastic.WithSeverity(*severity))
+			}
+			addAssertion(scenario, elastic.ElasticSecurityAlert(elasticMatcher.Name, opts...), parsedAssertion, "")
+		}
+		if datadogLogMatcher := parsedAssertion.DatadogLog; datadogLogMatcher != nil {
+			var opts []logs.Option
+			if datadogLogMatcher.Query != nil {
+				opts = append(opts, logs.WithQuery(*datadogLogMatcher.Query))
+			}
+			addAssertion(scenario, logs.DatadogLog(opts...), parsedAssertion, derefStr(datadogLogMatcher.Query))
+		}
+		if datadogEventMatcher := parsedAssertion.DatadogEvent; datadogEventMatcher != nil {
+			var opts []agentevents.Option
+			if datadogEventMatcher.Query != nil {
+				opts = append(opts, agentevents.WithQuery(*datadogEventMatcher.Query))
+			}
+			addAssertion(scenario, agentevents.DatadogAgentEvent(opts...), parsedAssertion, derefStr(datadogEventMatcher.Query))
+		}
+	}
+	return nil
+}
+
+func addAssertion(scenario *threatest.Scenario, matcher matchers.TelemetryMatcher, parsedAssertion ThreatestSchemaJsonScenariosElemExpectationsElem, query string) {
+	scenario.TelemetryAssertions = append(scenario.TelemetryAssertions, threatest.TelemetryAssertion{
+		Matcher:  matcher,
+		Discover: parsedAssertion.Discover,
+		Query:    query,
+	})
+}
+
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

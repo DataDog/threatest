@@ -19,10 +19,13 @@ thirdparty-licenses:
 
 mocks:
 	mockery --name=Detonator --dir pkg/threatest/detonators/ --output pkg/threatest/detonators/mocks
-	mockery --name=AlertGeneratedMatcher --dir pkg/threatest/matchers/ --output pkg/threatest/matchers/mocks
-	mockery --name=DatadogSecuritySignalsAPI  --dir pkg/threatest/matchers/datadog --output pkg/threatest/matchers/datadog/mocks
+	mockery --name=TelemetryMatcher --dir pkg/threatest/matchers/ --output pkg/threatest/matchers/mocks
+	mockery --name=SignalsAPI --dir pkg/threatest/matchers/datadog/signals --output pkg/threatest/matchers/datadog/signals/mocks
+	mockery --name=LogsAPI --dir pkg/threatest/matchers/datadog/logs --output pkg/threatest/matchers/datadog/logs/mocks
+	mockery --name=EventsAPI --dir pkg/threatest/matchers/datadog/agentevents --output pkg/threatest/matchers/datadog/agentevents/mocks
+	mockery --name=ElasticSecurityDetectionAlertsAPI --dir pkg/threatest/matchers/elastic --output pkg/threatest/matchers/elastic/mocks
 
 parser:
 	go get github.com/atombender/go-jsonschema/...
-	go install github.com/atombender/go-jsonschema/cmd/gojsonschema@latest
-	$${GOPATH}/bin/gojsonschema -p parser schemas/threatest.schema.json > pkg/threatest/parser/parser.go
+	go install github.com/atombender/go-jsonschema@latest
+	$${GOPATH}/bin/go-jsonschema -p parser schemas/threatest.schema.json > pkg/threatest/parser/parser.go

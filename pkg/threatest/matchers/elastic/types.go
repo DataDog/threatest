@@ -11,7 +11,6 @@ import (
 type ElasticSecurityAlertFilter struct {
 	RuleName string `yaml:"rule-name"`
 	Severity string
-	// There might be other attributes in the future
 }
 
 // ElasticSecurityAlertGeneratedAssertion verifies that an expected Elastic
@@ -57,7 +56,7 @@ func newAlertsAPI(kibanaURL, apiKey string) ElasticSecurityDetectionAlertsAPI {
 
 // ElasticSecurityAlert creates a builder for matching Elastic Security
 // detection alerts by rule name. By default, credentials are read from
-// the KIBANA_URL and ELASTIC_API_KEY environment variables. 
+// the KIBANA_URL and ELASTIC_API_KEY environment variables.
 func ElasticSecurityAlert(name string, opts ...Option) *ElasticSecurityAlertGeneratedAssertionBuilder {
 	builder := &ElasticSecurityAlertGeneratedAssertionBuilder{}
 	builder.AlertsAPI = newAlertsAPI(

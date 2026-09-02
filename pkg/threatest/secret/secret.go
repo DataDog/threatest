@@ -22,7 +22,7 @@ func New(value string) Secret {
 	return Secret{value: value}
 }
 
-// Value returns the underlying secret. Use deliberately — not in logs.
+// Value returns the underlying secret. Use deliberately -- not in logs.
 func (s Secret) Value() string {
 	return s.value
 }

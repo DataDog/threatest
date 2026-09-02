@@ -1,15 +1,18 @@
 {
   "type": "object",
   "description": "Matcher for a Datadog security signal",
-  "required": ["name"],
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name of the Datadog signal to match on (exact match)"
+      "description": "Name of the Datadog signal to match on (exact match). Required when discover is false."
     },
     "severity": {
       "type": "string",
       "description": "Severity of the Datadog signal to match on"
+    },
+    "query": {
+      "type": "string",
+      "description": "Raw Datadog security signals query. Supports the <% .CorrelationID %> marker."
     }
   }
 }

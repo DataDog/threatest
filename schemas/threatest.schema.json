@@ -79,6 +79,16 @@
                   "required": [
                     "elasticSecuritySignal"
                   ]
+                },
+                {
+                  "required": [
+                    "datadogLog"
+                  ]
+                },
+                {
+                  "required": [
+                    "datadogEvent"
+                  ]
                 }
               ],
               "properties": {
@@ -88,10 +98,21 @@
                 "elasticSecuritySignal": {
                   "$ref": "elasticSecuritySignal.schema.json"
                 },
+                "datadogLog": {
+                  "$ref": "datadogLog.schema.json"
+                },
+                "datadogEvent": {
+                  "$ref": "datadogEvent.schema.json"
+                },
                 "timeout": {
                   "type": "string",
                   "default": "5m",
                   "description": "The maximal time to wait for the assertion, written as a Go duration (e.g. 5m)"
+                },
+                "discover": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If true, collect and dump all matching objects instead of asserting. Discover entries never cause scenario failure and skip cleanup."
                 }
               }
             }

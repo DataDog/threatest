@@ -1,0 +1,81 @@
+[
+  {
+    "description": "opening a security group to the Internet",
+    "isSuccess": true,
+    "errorMessage": "",
+    "durationSeconds": 320.46,
+    "timeDetonated": "2026-01-01T10:50:00Z",
+    "discovered": {
+      "objects": {
+        "example-log-id-1": {
+          "eventName": "log",
+          "time": "2026-01-01T10:51:12Z",
+          "attributes": {
+            "id": "example-log-id-1",
+            "eventName": "AuthorizeSecurityGroupIngress",
+            "eventSource": "ec2.amazonaws.com",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "203.0.113.50",
+            "userIdentity": {
+              "type": "AssumedRole",
+              "arn": "arn:aws:sts::123456789012:assumed-role/stratus-red-team-role/stratus-red-team"
+            },
+            "service": "cloudtrail",
+            "status": "info"
+          },
+          "body": "..."
+        },
+        "example-log-id-2": {
+          "eventName": "log",
+          "time": "2026-01-01T10:51:14Z",
+          "attributes": {
+            "id": "example-log-id-2",
+            "eventName": "AuthorizeSecurityGroupIngress",
+            "eventSource": "ec2.amazonaws.com",
+            "awsRegion": "us-east-1",
+            "service": "cloudtrail",
+            "status": "info"
+          },
+          "body": "..."
+        }
+      }
+    }
+  },
+  {
+    "description": "curl metadata service",
+    "isSuccess": true,
+    "errorMessage": "",
+    "durationSeconds": 65.12,
+    "timeDetonated": "2026-01-01T10:55:00Z",
+    "discovered": {
+      "objects": {
+        "example-agent-event-id-1": {
+          "eventName": "agent-event",
+          "time": "2026-01-01T10:55:42Z",
+          "attributes": {
+            "id": "example-agent-event-id-1",
+            "title": "curl executed",
+            "host": "i-0123456789abcdef0",
+            "@agent.rule_id": "net_util_in_container_v3",
+            "@process.executable.name": "curl",
+            "@process.user": "root"
+          },
+          "body": "..."
+        },
+        "example-agent-event-id-2": {
+          "eventName": "agent-event",
+          "time": "2026-01-01T10:55:44Z",
+          "attributes": {
+            "id": "example-agent-event-id-2",
+            "title": "network utility executed",
+            "host": "i-0123456789abcdef0",
+            "@agent.rule_id": "net_util_in_container_v3",
+            "@process.executable.name": "curl",
+            "@process.user": "root"
+          },
+          "body": "..."
+        }
+      }
+    }
+  }
+]

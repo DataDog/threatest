@@ -19,7 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const lookbackWindow = 15 * time.Minute
+const lookbackWindow = 1 * time.Hour
 const maxResults = 1000
 
 const QueryAllOpenSignals = `@workflow.triage.state:open`

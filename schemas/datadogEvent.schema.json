@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "description": "Matcher for Datadog events",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Raw Datadog events query. Supports the <% .CorrelationID %> marker to embed the detonation UUID. If omitted, a default correlation query is used."
+    }
+  }
+}

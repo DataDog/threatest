@@ -55,11 +55,11 @@ func newMatcher(api elastic.ElasticSecurityDetectionAlertsAPI) elastic.ElasticSe
 	}
 }
 
-func TestHasExpectedAlert(t *testing.T) {
+func TestHasExpected(t *testing.T) {
 	containsRuleName := func(query string) bool { return strings.Contains(query, testRuleName) }
 
 	// The rule-scoped Elastic query already filters by rule name, so the API
-	// returns only alerts matching the rule. HasExpectedAlert then additionally
+	// returns only alerts matching the rule. HasExpected then additionally
 	// checks for the detonation UID in the alert source.
 	tests := []struct {
 		name        string
@@ -97,7 +97,7 @@ func TestHasExpectedAlert(t *testing.T) {
 			mockAPI.On("SearchAlerts", mock.Anything, mock.MatchedBy(containsRuleName)).Return(tt.alerts, nil)
 
 			matcher := newMatcher(mockAPI)
-			matches, err := matcher.HasExpectedAlert(context.Background(), detonationUID)
+			matches, err := matcher.HasExpected(context.Background(), detonationUID)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectMatch, matches)
 		})

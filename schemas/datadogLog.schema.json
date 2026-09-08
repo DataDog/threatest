@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "description": "Matcher for Datadog logs",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Raw Datadog logs query. Supports the <% .CorrelationID %> marker to embed the detonation UUID. If omitted, a default fulltext correlation query is used."
+    }
+  }
+}

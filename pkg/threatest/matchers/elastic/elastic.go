@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/datadog/threatest/pkg/threatest/matchers"
 	"github.com/datadog/threatest/pkg/threatest/secret"
 )
 
@@ -73,7 +74,10 @@ func (m *ElasticSecurityDetectionAlertsAPIImpl) CloseAlert(ctx context.Context, 
 	if err != nil {
 		return fmt.Errorf("close alert request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}()
 
 	return nil
 }
@@ -109,19 +113,11 @@ func (m *ElasticSecurityDetectionAlertsAPIImpl) doRequest(ctx context.Context, m
 	return resp, nil
 }
 
-func (m *ElasticSecurityAlertGeneratedAssertionBuilder) HasExpectedAlert(ctx context.Context, detonationUuid string) (bool, error) {
-	return m.ElasticSecurityAlertGeneratedAssertion.HasExpectedAlert(ctx, detonationUuid)
-}
-
-func (m *ElasticSecurityAlertGeneratedAssertionBuilder) Cleanup(ctx context.Context, detonationUuid string) error {
-	return m.ElasticSecurityAlertGeneratedAssertion.Cleanup(ctx, detonationUuid)
-}
-
-func (m *ElasticSecurityAlertGeneratedAssertion) HasExpectedAlert(ctx context.Context, detonationUuid string) (bool, error) {
+func (m *ElasticSecurityAlertGeneratedAssertion) HasExpected(ctx context.Context, correlationID string) (bool, error) {
 	query := m.buildElasticAlertQuery()
 	alerts, err := m.AlertsAPI.SearchAlerts(ctx, query)
 	if err != nil {
-		return false, errors.New("unable to search for Elastic Security alert: " + err.Error())
+		return false, fmt.Errorf("unable to search for Elastic Security alert: %w", err)
 	}
 
 	if len(alerts) == 0 {
@@ -129,7 +125,7 @@ func (m *ElasticSecurityAlertGeneratedAssertion) HasExpectedAlert(ctx context.Co
 	}
 
 	for i := range alerts {
-		if m.alertMatchesExecution(alerts[i], detonationUuid) {
+		if m.alertMatchesExecution(alerts[i], correlationID) {
 			return true, nil
 		}
 	}
@@ -141,16 +137,24 @@ func (m *ElasticSecurityAlertGeneratedAssertion) String() string {
 	return fmt.Sprintf("Elastic Security alert '%s'", m.AlertFilter.RuleName)
 }
 
-func (m *ElasticSecurityAlertGeneratedAssertion) Cleanup(ctx context.Context, detonationUuid string) error {
+func (m *ElasticSecurityAlertGeneratedAssertion) Related(ctx context.Context, uuid string) (map[string]matchers.ThreatestEvent, error) {
+	return nil, errors.New("Related is not implemented for Elastic Security")
+}
+
+func (m *ElasticSecurityAlertGeneratedAssertion) Search(ctx context.Context, query string, _ ...matchers.SearchOption) (map[string]matchers.ThreatestEvent, error) {
+	return nil, errors.New("Search is not implemented for Elastic Security")
+}
+
+func (m *ElasticSecurityAlertGeneratedAssertion) Cleanup(ctx context.Context, correlationID string) error {
 	alerts, err := m.AlertsAPI.SearchAlerts(ctx, buildAllOpenAlertsQuery())
 	if err != nil {
-		return errors.New("unable to search for Elastic Security alerts: " + err.Error())
+		return fmt.Errorf("unable to search for Elastic Security alerts: %w", err)
 	}
 
 	for i := range alerts {
-		if m.alertMatchesExecution(alerts[i], detonationUuid) {
+		if m.alertMatchesExecution(alerts[i], correlationID) {
 			if err := m.AlertsAPI.CloseAlert(ctx, alerts[i].ID); err != nil {
-				return errors.New("unable to close alert " + alerts[i].ID + ": " + err.Error())
+				return fmt.Errorf("unable to close alert %s: %w", alerts[i].ID, err)
 			}
 		}
 	}

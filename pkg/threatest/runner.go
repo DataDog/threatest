@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
+	"maps"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/datadog/threatest/pkg/threatest/matchers"
+	"github.com/datadog/threatest/pkg/threatest/querybuilder"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -41,7 +43,6 @@ func (m *TestRunner) Run() error {
 func (m *TestRunner) RunWithContext(ctx context.Context) error {
 	m.buildScenarios()
 
-	// Run every scenario one by one
 	failedScenarios := map[string]error{}
 	for i := range m.Scenarios {
 		scenario := m.Scenarios[i]
@@ -74,75 +75,133 @@ func (m *TestRunner) buildScenarios() {
 }
 
 func (m *TestRunner) runScenario(ctx context.Context, scenario *Scenario) error {
-	detonationUid, err := scenario.Detonator.Detonate()
+	correlationID, err := scenario.Detonator.Detonate()
 	if err != nil {
 		return err
 	}
 	//TODO: When to clean? If we don't wait a bit, we risk missing signals that were generated after our assertion matched
-	defer m.CleanupScenario(ctx, scenario, detonationUid)
-	start := time.Now()
+	defer m.cleanupScenario(ctx, scenario, correlationID)
 
-	if len(scenario.Assertions) == 0 {
-		return nil
+	if scenario.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, time.Now().Add(scenario.Timeout))
+		defer cancel()
 	}
 
 	log.Debugf("Scenario '%s' detonated", scenario.Name)
 
-	// Build a queue containing all assertions
-	remainingAssertions := make(chan matchers.AlertGeneratedMatcher, len(scenario.Assertions))
-	for i := range scenario.Assertions {
-		remainingAssertions <- scenario.Assertions[i]
-	}
-	log.Debugf("Waiting for %d assertions", len(scenario.Assertions))
-	hasDeadline := scenario.Timeout > 0
-	deadline := start.Add(scenario.Timeout)
-	for len(remainingAssertions) > 0 {
-		if ctx.Err() != nil {
-			return fmt.Errorf("%s: context cancelled: %w", scenario.Name, ctx.Err())
-		}
-		if hasDeadline && time.Now().After(deadline) {
-			log.Printf("%s: timeout exceeded waiting for alerts (%d alerts not generated)\n", scenario.Name, len(remainingAssertions))
-			break
-		}
+	tasks := m.buildAssertionTasks(ctx, scenario, correlationID)
 
-		assertion := <-remainingAssertions
-		hasAlert, err := assertion.HasExpectedAlert(ctx, detonationUid)
-		if err != nil {
-			return err
-		}
-		if hasAlert {
-			timeSpentStr := strconv.Itoa(int(time.Since(start).Seconds()))
-			log.Printf("%s: Confirmed that the expected signal (%s) was created in Datadog (took %s seconds).\n", scenario.Name, assertion.String(), timeSpentStr)
-		} else {
-			// requeue assertion
-			log.Debugf("Assertion %s did not pass, requeuing it", assertion.String())
-			remainingAssertions <- assertion
-			time.Sleep(m.Interval)
-		}
-	}
+	var mu sync.Mutex
+	var failures []string
+	var wg sync.WaitGroup
 
-	if numRemainingAssertions := len(remainingAssertions); numRemainingAssertions > 0 {
-		errText := fmt.Sprintf("%s: %d assertions did not pass", scenario.Name, numRemainingAssertions)
-		for i := 0; i < numRemainingAssertions; i++ {
-			assertion := <-remainingAssertions
-			errText += fmt.Sprintf("\n => Did not find %s", assertion)
-		}
-		return errors.New(errText)
-	} else {
-		log.Printf("%s: All assertions passed\n", scenario.Name)
+	for i := range tasks {
+		t := tasks[i]
+		wg.Go(func() {
+			if err := t(); err != nil {
+				mu.Lock()
+				failures = append(failures, err.Error())
+				mu.Unlock()
+			}
+		})
 	}
+	wg.Wait()
 
+	if len(failures) > 0 {
+		return errors.New(strings.Join(failures, "\n"))
+	}
+	log.Printf("%s: All assertions passed\n", scenario.Name)
 	return nil
 }
 
-func (m *TestRunner) CleanupScenario(ctx context.Context, scenario *Scenario, detonationUid string) {
-	if len(scenario.Assertions) == 0 {
-		return
+func (m *TestRunner) buildAssertionTasks(ctx context.Context, scenario *Scenario, correlationID string) []func() error {
+	var tasks []func() error
+
+	for i := range scenario.TelemetryAssertions {
+		a := &scenario.TelemetryAssertions[i]
+		if a.Discover {
+			tasks = append(tasks, func() error {
+				m.collect(ctx, a, correlationID)
+				log.Printf("%s: Discovered %d %s\n", scenario.Name, len(a.Discovered), a.Matcher.String())
+				for id, e := range a.Discovered {
+					log.Printf("    [%s] %s", id, matchers.DescribeEvent(e))
+				}
+				return nil
+			})
+			continue
+		}
+
+		tasks = append(tasks, func() error {
+			found, err := m.pollAssert(ctx, a.Matcher.HasExpected, correlationID)
+			if err != nil {
+				return fmt.Errorf("%s: error checking %s: %w", scenario.Name, a.Matcher.String(), err)
+			}
+			if !found {
+				return fmt.Errorf("%s: did not find %s", scenario.Name, a.Matcher.String())
+			}
+			return nil
+		})
 	}
 
-	err := scenario.Assertions[0].Cleanup(ctx, detonationUid)
-	if err != nil {
-		log.Warnf("warning: failed to clean up generated signals: %s", err.Error())
+	return tasks
+}
+
+func (m *TestRunner) pollAssert(ctx context.Context, hasExpected func(context.Context, string) (bool, error), correlationID string) (bool, error) {
+	for {
+		if ctx.Err() != nil {
+			return false, nil
+		}
+		found, err := hasExpected(ctx, correlationID)
+		if err != nil {
+			return false, err
+		}
+		if found {
+			return true, nil
+		}
+		select {
+		case <-ctx.Done():
+			return false, nil
+		case <-time.After(m.Interval):
+		}
 	}
-	// TODO (code smell): this shouldn't be specific to a single assertion?
+}
+
+func (m *TestRunner) collect(ctx context.Context, a *TelemetryAssertion, correlationID string) {
+	a.Discovered = make(map[string]matchers.ThreatestEvent)
+	for {
+		if ctx.Err() != nil {
+			return
+		}
+		var results map[string]matchers.ThreatestEvent
+		var err error
+		if a.Query != "" {
+			resolved := querybuilder.SubstituteQuery(a.Query, querybuilder.CorrelationVars{CorrelationID: correlationID})
+			results, err = a.Matcher.Search(ctx, resolved)
+		} else {
+			results, err = a.Matcher.Related(ctx, correlationID)
+		}
+		if err != nil {
+			log.Warnf("discovery error: %v", err)
+		} else {
+			maps.Copy(a.Discovered, results) // In case of error, results is nil, so this is a no-op
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(m.Interval):
+		}
+	}
+}
+
+func (m *TestRunner) cleanupScenario(ctx context.Context, scenario *Scenario, correlationID string) {
+	for i := range scenario.TelemetryAssertions {
+		if scenario.TelemetryAssertions[i].Discover {
+			continue
+		}
+		// TODO (code smell): this shouldn't be specific to a single assertion?
+		if err := scenario.TelemetryAssertions[i].Matcher.Cleanup(ctx, correlationID); err != nil {
+			log.Warnf("warning: failed to clean up generated signals: %s", err.Error())
+		}
+	}
 }

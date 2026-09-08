@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	. "github.com/datadog/threatest/pkg/threatest"
 	. "github.com/datadog/threatest/pkg/threatest/detonators"
-	"github.com/datadog/threatest/pkg/threatest/matchers/datadog"
+	"github.com/datadog/threatest/pkg/threatest/matchers/datadog/signals"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -37,7 +37,7 @@ func TestCustomAWSDetonator(t *testing.T) {
 
 			return nil
 		})).
-		Expect(datadog.DatadogSecuritySignal("AWS IAM privileged policy was applied to a user")).
+		Expect(signals.DatadogSecuritySignal("AWS IAM privileged policy was applied to a user")).
 		WithTimeout(15 * time.Minute)
 
 	assert.Nil(t, threatest.Run())

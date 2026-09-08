@@ -98,14 +98,122 @@ scenarios:
 
 	assert.Equal(t, scenarios[0].Name, "curl metadata service")
 	assert.NotNil(t, scenarios[0].Detonator)
-	assert.Len(t, scenarios[0].Assertions, 1)
+	assert.Len(t, scenarios[0].TelemetryAssertions, 1)
 
 	assert.Equal(t, scenarios[1].Name, "opening a security group to the Internet")
 	assert.NotNil(t, scenarios[1].Detonator)
-	assert.Len(t, scenarios[1].Assertions, 1)
+	assert.Len(t, scenarios[1].TelemetryAssertions, 1)
 
 	assert.Equal(t, scenarios[2].Name, "curl metadata service detected by Elastic")
 	assert.NotNil(t, scenarios[2].Detonator)
-	assert.Len(t, scenarios[2].Assertions, 1)
-	assert.Equal(t, "Elastic Security alert 'Network utility accessed cloud metadata service'", scenarios[2].Assertions[0].String())
+	assert.Len(t, scenarios[2].TelemetryAssertions, 1)
+	assert.Equal(t, "Elastic Security alert 'Network utility accessed cloud metadata service'", scenarios[2].TelemetryAssertions[0].Matcher.String())
+}
+
+func TestParserParsesNewTelemetryBlocksAndDiscoverFlag(t *testing.T) {
+	yamlInput := `
+scenarios:
+  - name: discover logs and events
+    detonate:
+      localDetonator:
+        commands: ["echo hi"]
+    expectations:
+      - timeout: 5m
+        datadogLog:
+          query: "<% .CorrelationID %>"
+        discover: true
+      - timeout: 5m
+        datadogEvent:
+          query: "stratus-red-team"
+        discover: true
+      - timeout: 5m
+        datadogSecuritySignal:
+          name: "some signal"
+        discover: true
+`
+	scenarios, err := Parse([]byte(yamlInput), "", "", "")
+	assert.Nil(t, err, "parsing new telemetry blocks should not error")
+	assert.Len(t, scenarios, 1)
+	assert.Equal(t, "discover logs and events", scenarios[0].Name)
+	assert.NotNil(t, scenarios[0].Detonator)
+	assert.Len(t, scenarios[0].TelemetryAssertions, 3)
+	assert.True(t, scenarios[0].TelemetryAssertions[0].Discover)
+	assert.Equal(t, "<% .CorrelationID %>", scenarios[0].TelemetryAssertions[0].Query)
+	assert.True(t, scenarios[0].TelemetryAssertions[1].Discover)
+	assert.Equal(t, "stratus-red-team", scenarios[0].TelemetryAssertions[1].Query)
+	assert.True(t, scenarios[0].TelemetryAssertions[2].Discover)
+}
+
+func TestParserParsesDiscoverDefaultFalse(t *testing.T) {
+	yamlInput := `
+scenarios:
+  - name: assert only
+    detonate:
+      localDetonator:
+        commands: ["echo hi"]
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal:
+          name: foo
+`
+	scenarios, err := Parse([]byte(yamlInput), "", "", "")
+	assert.Nil(t, err)
+	assert.Len(t, scenarios, 1)
+	assert.Len(t, scenarios[0].TelemetryAssertions, 1)
+	assert.False(t, scenarios[0].TelemetryAssertions[0].Discover)
+}
+
+func TestParserRejectsElasticDiscover(t *testing.T) {
+	yamlInput := `
+scenarios:
+  - name: elastic discover
+    detonate:
+      localDetonator:
+        commands: ["echo hi"]
+    expectations:
+      - timeout: 1m
+        elasticSecuritySignal:
+          name: foo
+        discover: true
+`
+	scenarios, err := Parse([]byte(yamlInput), "", "", "")
+	assert.Nil(t, scenarios)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "discover mode is not supported for Elastic Security")
+}
+
+func TestParserRejectsAlertQueryWithoutDiscover(t *testing.T) {
+	yamlInput := `
+scenarios:
+  - name: alert query without discover
+    detonate:
+      localDetonator:
+        commands: ["echo hi"]
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal:
+          name: foo
+          query: "service:aws"
+`
+	scenarios, err := Parse([]byte(yamlInput), "", "", "")
+	assert.Nil(t, scenarios)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "query on datadogSecuritySignal is only supported with discover: true")
+}
+
+func TestParserRejectsMissingSignalName(t *testing.T) {
+	yamlInput := `
+scenarios:
+  - name: missing name
+    detonate:
+      localDetonator:
+        commands: ["echo hi"]
+    expectations:
+      - timeout: 1m
+        datadogSecuritySignal: {}
+`
+	scenarios, err := Parse([]byte(yamlInput), "", "", "")
+	assert.Nil(t, scenarios)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "datadogSecuritySignal.name is required when discover is false")
 }

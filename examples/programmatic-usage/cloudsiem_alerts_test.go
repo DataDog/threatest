@@ -4,7 +4,7 @@ import (
 	_ "github.com/datadog/stratus-red-team/v2/pkg/stratus/loader" // Note: This import is needed
 	. "github.com/datadog/threatest/pkg/threatest"
 	. "github.com/datadog/threatest/pkg/threatest/detonators"
-	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog"
+	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog/signals"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -17,7 +17,7 @@ func TestCloudSIEMAWSAlerts(t *testing.T) {
 
 	threatest.Scenario("AWS console login").
 		WhenDetonating(StratusRedTeamTechnique("aws.initial-access.console-login-without-mfa")).
-		Expect(DatadogSecuritySignal("AWS Console login without MFA", WithSeverity("medium"))).
+		Expect(DatadogSecuritySignal("AWS Console login without MFA", signals.WithSeverity("medium"))).
 		WithTimeout(10 * time.Minute)
 
 	threatest.Scenario("Opening port 22 of a security group to the Internet").

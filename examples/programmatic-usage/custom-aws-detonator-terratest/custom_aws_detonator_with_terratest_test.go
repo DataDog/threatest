@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	. "github.com/datadog/threatest/pkg/threatest"
 	. "github.com/datadog/threatest/pkg/threatest/detonators"
-	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog"
+	. "github.com/datadog/threatest/pkg/threatest/matchers/datadog/signals"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"time"

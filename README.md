@@ -9,7 +9,7 @@
 
 Threatest is a CLI and Go framework for testing threat detection end-to-end.
 
-Threatest allows you to **detonate** an attack technique, and verify that the alert you expect was generated in your favorite security platform.
+Threatest allows you to **detonate** an attack technique, and verify that the telemetry you expect was generated in your favorite security platform.
 
 Read the announcement blog post: https://securitylabs.datadoghq.com/articles/threatest-end-to-end-testing-threat-detection/
 
@@ -20,25 +20,45 @@ Read the announcement blog post: https://securitylabs.datadoghq.com/articles/thr
 A **detonator** describes how and where an attack technique is executed.
 
 Supported detonators:
-* Local command execution
-* SSH command execution
-* Stratus Red Team
-* AWS CLI detonator
-* AWS detonator (programmatic only, does not work with the CLI)
 
-### Alert matchers
+- Local command execution
+- SSH command execution
+- Stratus Red Team
+- AWS CLI detonator
+- AWS detonator (programmatic only, does not work with the CLI)
 
-An **alert matcher** is a platform-specific integration that can check if an expected alert was triggered.
+### Matchers
 
-Supported alert matchers:
-* Datadog security signals
-* Elastic Security signals
+An **matcher** is a platform-specific integration that can check if an expected telemetry object was created (for instance, if an alert was triggered), or widely search of any trace it can find.
+
+Supported matchers:
+
+- Datadog security signals
+- Datadog logs
+- Datadog agent events (CWS runtime events)
+- Elastic Security signals
 
 ### Detonation and alert correlation
 
 Each detonation is assigned a UUID. This UUID is reflected in the detonation and used to ensure that the matched alert corresponds exactly to this detonation.
 
 The way this is done depends on the detonator; for instance, Stratus Red Team and the AWS Detonator inject it in the user-agent; the SSH detonator uses a parent process containing the UUID.
+
+### Discovery mode
+
+In addition to asserting that an alert was generated, Threatest can **discover** telemetry correlated to a detonation. Discovery mode collects all matching objects and dumps them instead of asserting.
+
+Discovery expectations use `discover: true` and an optional `query:` field. The `<% .CorrelationID %>` marker can be used, it is substituted with the detonation UUID:
+
+```yaml
+expectations:
+  - timeout: 5m
+    datadogLog:
+      query: "source:cloudtrail @http.useragent:*<% .CorrelationID %>*"
+    discover: true
+```
+
+If no `query:` is provided, a default correlation query is used. Discovery mode skips cleanup.
 
 ## Usage
 
@@ -73,7 +93,7 @@ $ threatest run scenarios.threatest.yaml
 
 **Sample scenario definition files**
 
-* Detonating over SSH
+- Detonating over SSH
 
 ```yaml
 scenarios:
@@ -90,7 +110,7 @@ scenarios:
           severity: medium
 ```
 
-* Detonating using Stratus Red Team
+- Detonating using Stratus Red Team
 
 ```yaml
 scenarios:
@@ -107,8 +127,7 @@ scenarios:
           name: "Potential administrative port open to the world via AWS security group"
 ```
 
-
-* Detonating using AWS CLI commands
+- Detonating using AWS CLI commands
 
 ```yaml
 scenarios:
@@ -119,14 +138,14 @@ scenarios:
       awsCliDetonator:
         script: |
           set -e
-          
+
           # Setup
           vpc=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query Vpc.VpcId --output text)
           sg=$(aws ec2 create-security-group --group-name sample-sg --description "Test security group" --vpc-id $vpc --query GroupId --output text)
-          
+
           # Open security group
           aws ec2 authorize-security-group-ingress --group-id $sg --protocol tcp --port 22 --cidr 0.0.0.0/0
-          
+
           # Cleanup
           aws ec2 delete-security-group --group-id $sg
           aws ec2 delete-vpc --vpc-id $vpc
@@ -135,7 +154,6 @@ scenarios:
         datadogSecuritySignal:
           name: "Potential administrative port open to the world via AWS security group"
 ```
-
 
 You can output the test results to a JSON file:
 

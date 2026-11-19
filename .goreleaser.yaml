@@ -19,6 +19,10 @@ builds:
     binary: threatest
 brews:
   - name: threatest
+    # Omit the custom committer so GitHub signs the commit as the GitHub App
+    # (dd-octo-sts), required by the org-wide signed commits ruleset.
+    commit_author:
+      use_github_app_token: true
     repository:
       owner: datadog
       name: threatest

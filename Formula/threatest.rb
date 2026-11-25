@@ -5,21 +5,21 @@
 class Threatest < Formula
   desc ""
   homepage "https://github.com/DataDog/threatest"
-  version "1.4.0"
+  version "1.5.1"
   license "Apache-2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Darwin_x86_64.tar.gz"
-      sha256 "5f74325a91895e119b9ba0e6da7437042b2ca9cb716970841334600aabe95b6c"
+      url "https://github.com/DataDog/threatest/releases/download/v1.5.1/threatest_Darwin_x86_64.tar.gz"
+      sha256 "1ee851d033488565ae576bfd4646c5ef4ac36b960646392aa16f9312f389cc43"
 
       define_method(:install) do
         bin.install "threatest"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Darwin_arm64.tar.gz"
-      sha256 "b436c02d44379e6d6bd11aecb6546f8675bf2a9c0175f77966fae17c77e67cfd"
+      url "https://github.com/DataDog/threatest/releases/download/v1.5.1/threatest_Darwin_arm64.tar.gz"
+      sha256 "a9894aa040d5176bb259af01a0126828ca7fc5c5c15b890dea2807643ef16e88"
 
       define_method(:install) do
         bin.install "threatest"
@@ -29,15 +29,15 @@ class Threatest < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Linux_x86_64.tar.gz"
-      sha256 "cd69e7c224e6fb57354e0b4d25b119cbf335d62863f50058f8d3401a6abe0808"
+      url "https://github.com/DataDog/threatest/releases/download/v1.5.1/threatest_Linux_x86_64.tar.gz"
+      sha256 "79dcca64c3d6d837104bee2e2ec0c978b4c98357264e07d3fd7f2701545d4ac8"
       define_method(:install) do
         bin.install "threatest"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/DataDog/threatest/releases/download/v1.4.0/threatest_Linux_arm64.tar.gz"
-      sha256 "6193fe312ddd666677880da1669c136d93bfc9162d50eefaa5b808f0bc546f77"
+      url "https://github.com/DataDog/threatest/releases/download/v1.5.1/threatest_Linux_arm64.tar.gz"
+      sha256 "0c32b1b3b3e6b4da0aa524481758c1a07c93091f31e924ef7f8f27c57127916f"
       define_method(:install) do
         bin.install "threatest"
       end
